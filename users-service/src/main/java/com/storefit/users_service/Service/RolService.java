@@ -21,6 +21,5 @@ public class RolService {
         return repo.findById(id).orElseThrow(() -> new EntityNotFoundException("Rol no encontrado: " + id));
     }
 
-    // Modificaciones deshabilitadas: roles fijos y predefinidos.
 }
 
