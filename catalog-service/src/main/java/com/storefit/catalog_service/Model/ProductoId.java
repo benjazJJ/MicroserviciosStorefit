@@ -1,20 +1,26 @@
 package com.storefit.catalog_service.Model;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.io.Serializable;
 
 @Embeddable
-@NoArgsConstructor 
+@Data
+@NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode
-@Data
-
+@Schema(description = "Clave primaria compuesta para Producto (id_categoria + id_producto)")
 public class ProductoId implements Serializable {
-  @Column(name = "id_categoria")
-  private Long idCategoria;
 
-  @Column(name = "id_producto")
-  private Long idProducto;
+    private static final long serialVersionUID = 1L;
+
+    @Column(name = "id_categoria", nullable = false)
+    @Schema(description = "ID de la categoría", example = "1")
+    private Long idCategoria;
+
+    @Column(name = "id_producto", nullable = false)
+    @Schema(description = "ID del producto dentro de la categoría", example = "101")
+    private Long idProducto;
 }

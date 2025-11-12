@@ -1,0 +1,94 @@
+package com.storefit.catalog_service.Controller;
+
+import com.storefit.catalog_service.Model.Categoria;
+import com.storefit.catalog_service.Service.CategoriaService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.net.URI;
+import java.util.List;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api/v1/categorias")
+@RequiredArgsConstructor
+public class CategoriaController {
+
+    private final CategoriaService service;
+
+    @Operation(summary = "Listar categorías", description = "Obtiene todas las categorías")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "OK",
+            content = @Content(schema = @Schema(implementation = Categoria.class)))
+    })
+    @GetMapping
+    public ResponseEntity<List<Categoria>> all() {
+        return ResponseEntity.ok(service.findAll());
+    }
+
+    @Operation(summary = "Obtener categoría por ID")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "OK",
+            content = @Content(schema = @Schema(implementation = Categoria.class))),
+        @ApiResponse(responseCode = "404", description = "No encontrada")
+    })
+    @GetMapping("/{id}")
+    public ResponseEntity<Categoria> byId(@PathVariable Long id) {
+        return ResponseEntity.ok(service.findById(id));
+    }
+
+    @Operation(summary = "Crear categoría")
+    @ApiResponses({
+        @ApiResponse(responseCode = "201", description = "Creada",
+            content = @Content(schema = @Schema(implementation = Categoria.class))),
+        @ApiResponse(responseCode = "400", description = "Solicitud inválida")
+    })
+    @PostMapping
+    public ResponseEntity<Map<String, Object>> create(@Valid @RequestBody Categoria c) {
+        var created = service.create(c);
+        var location = URI.create("/api/v1/categorias/" + created.getIdCategoria());
+        return ResponseEntity.created(location).body(
+            Map.of(
+                "message", "Categoría creada correctamente",
+                "data", created
+            )
+        );
+    }
+
+    @Operation(summary = "Actualizar categoría")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Actualizada",
+            content = @Content(schema = @Schema(implementation = Categoria.class))),
+        @ApiResponse(responseCode = "404", description = "No encontrada")
+    })
+    @PutMapping("/{id}")
+    public ResponseEntity<Map<String, Object>> update(@PathVariable Long id, @Valid @RequestBody Categoria c) {
+        var updated = service.update(id, c);
+        return ResponseEntity.ok(
+            Map.of(
+                "message", "Categoría actualizada correctamente",
+                "data", updated
+            )
+        );
+    }
+
+    @Operation(summary = "Eliminar categoría")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Eliminada"),
+        @ApiResponse(responseCode = "404", description = "No encontrada")
+    })
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Map<String, String>> delete(@PathVariable Long id) {
+        service.delete(id);
+        return ResponseEntity.ok(
+            Map.of("message", "Categoría eliminada correctamente")
+        );
+    }
+}
