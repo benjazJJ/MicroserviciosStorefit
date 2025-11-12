@@ -9,6 +9,7 @@ import java.io.Serializable;
 @NoArgsConstructor 
 @AllArgsConstructor
 @EqualsAndHashCode
+@Data
 
 public class ProductoId implements Serializable {
   @Column(name = "id_categoria")

@@ -10,12 +10,14 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
+import lombok.Data;
 
 @Entity
 @Table(name = "registro",
   indexes = { @Index(name = "idx_registro_usuario", columnList = "usuario", unique = true) })
 @NoArgsConstructor
 @AllArgsConstructor
+@Data
 
 public class Registro {
 
@@ -24,6 +26,9 @@ public class Registro {
 
   @Column(name = "rol_id", nullable = false)
   private Long rolId;
+
+  @Column(name = "rol_nombre", nullable = true, length = 50)
+  private String rolNombre;
 
   @NotBlank @Column(name = "usuario", nullable = false, length = 60)
   private String usuario;

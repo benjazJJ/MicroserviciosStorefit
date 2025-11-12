@@ -15,6 +15,7 @@ import lombok.*;
 @NoArgsConstructor 
 @AllArgsConstructor
 @Builder
+@Data
 public class Producto {
 
   @EmbeddedId

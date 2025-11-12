@@ -2,24 +2,26 @@ package com.storefit.users_service.Model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.NoArgsConstructor;
+import lombok.Data;
 
 @Entity
 @Table(name = "rol", uniqueConstraints = @UniqueConstraint(columnNames = "nombre_rol"))
 @AllArgsConstructor
 @NoArgsConstructor
+@Data
+@Builder
 
 
 public class Rol {
 
-  @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Id
   @Column(name = "rol_id")
   private Long rolId;
 

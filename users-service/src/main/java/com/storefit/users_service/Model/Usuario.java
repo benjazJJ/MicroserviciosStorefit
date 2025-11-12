@@ -9,6 +9,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
+import lombok.Data;
 
 @Entity
 @Table(name = "usuarios",
@@ -18,6 +19,7 @@ import lombok.NoArgsConstructor;
 })
 @NoArgsConstructor 
 @AllArgsConstructor
+@Data
 
 public class Usuario {
 
