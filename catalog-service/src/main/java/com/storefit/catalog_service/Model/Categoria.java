@@ -3,6 +3,7 @@ package com.storefit.catalog_service.Model;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import com.fasterxml.jackson.annotation.JsonAlias;
 import lombok.*;
 
 @Entity
@@ -20,7 +21,8 @@ public class Categoria {
     private Long idCategoria;
 
     @NotBlank
-    @Column(name = "nombre_categoria", nullable = false, unique = true, length = 50)
+    @Column(name = "nombre", nullable = false, unique = true, length = 50)
+    @JsonAlias("nombre")
     @Schema(description = "Nombre de la categoría", example = "Poleras")
     private String nombreCategoria;
 }
