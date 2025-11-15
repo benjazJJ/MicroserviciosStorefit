@@ -2,6 +2,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "OrdersServiceApplication",
+            "request": "launch",
+            "mainClass": "com.storefit.orders_service.OrdersServiceApplication",
+            "projectName": "orders-service"
+        },
+        {
+            "type": "java",
             "name": "Spring Boot-SupportServiceApplication<support-service>",
             "request": "launch",
             "cwd": "${workspaceFolder}",
