@@ -1,16 +1,18 @@
 package com.storefit.catalog_service.Service;
 
+import java.util.List;
+import java.util.Set;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.storefit.catalog_service.Model.Producto;
 import com.storefit.catalog_service.Model.ProductoId;
 import com.storefit.catalog_service.Repository.CategoriaRepository;
 import com.storefit.catalog_service.Repository.ProductoRepository;
+
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -91,7 +93,44 @@ public class ProductoService {
         repo.delete(findByIds(categoriaId, productoId));
     }
 
-    /* ============ Helpers ============ */
+    //Reserva y descuento de stock
+
+    @Transactional
+    public void verificarYDescontarStock(List<StockReservaItem> items) {
+        if (items == null || items.isEmpty()) {
+            throw new IllegalArgumentException("La lista de items de stock no puede estar vacía");
+        }
+
+        // Primero validamos todo (existencia y stock suficiente)
+        for (StockReservaItem item : items) {
+            if (item.getIdProducto() == null || item.getCantidad() == null || item.getCantidad() <= 0) {
+                throw new IllegalArgumentException("Cada item debe indicar idProducto y cantidad > 0");
+            }
+
+            var producto = repo.findByIdIdProducto(item.getIdProducto())
+                    .orElseThrow(() -> new EntityNotFoundException(
+                            "Producto no encontrado con id_producto=" + item.getIdProducto()));
+
+            if (producto.getStock() < item.getCantidad()) {
+                throw new StockInsuficienteException(
+                        "Stock insuficiente para el producto " + item.getIdProducto()
+                                + " (disponible=" + producto.getStock()
+                                + ", solicitado=" + item.getCantidad() + ")"
+                );
+            }
+        }
+
+        // Si todo está OK, recién aquí descontamos stock
+        for (StockReservaItem item : items) {
+            var producto = repo.findByIdIdProducto(item.getIdProducto())
+                    .orElseThrow(() -> new EntityNotFoundException(
+                            "Producto no encontrado con id_producto=" + item.getIdProducto()));
+            producto.setStock(producto.getStock() - item.getCantidad());
+            repo.save(producto);
+        }
+    }
+
+    //Helpers
 
     private void normalizar(Producto p) {
         if (p.getMarca() != null) p.setMarca(p.getMarca().trim());

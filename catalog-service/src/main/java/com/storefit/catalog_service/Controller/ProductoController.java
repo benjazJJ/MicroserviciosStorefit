@@ -1,8 +1,24 @@
 package com.storefit.catalog_service.Controller;
 
+import java.net.URI;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.storefit.catalog_service.Model.Producto;
 import com.storefit.catalog_service.Model.ProductoId;
 import com.storefit.catalog_service.Service.ProductoService;
+import com.storefit.catalog_service.Service.StockReservaItem;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -10,12 +26,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.net.URI;
-import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/productos")
@@ -113,6 +123,29 @@ public class ProductoController {
         service.delete(categoriaId, productoId);
         return ResponseEntity.ok(
             Map.of("message", "Producto eliminado correctamente")
+        );
+    }
+
+    //Reservar y descontar stock para una compra
+
+    @Operation(
+            summary = "Reservar y descontar stock para una compra",
+            description = "Verifica que haya stock suficiente para todos los productos y descuenta el stock si todo está OK"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Stock reservado correctamente"),
+            @ApiResponse(responseCode = "400", description = "Datos inválidos o stock insuficiente"),
+            @ApiResponse(responseCode = "404", description = "Algún producto no existe")
+    })
+    @PostMapping("/stock/reservar")
+    public ResponseEntity<Map<String, Object>> reservarStock(
+            @RequestBody List<StockReservaItem> items
+    ) {
+        service.verificarYDescontarStock(items);
+        return ResponseEntity.ok(
+                Map.of(
+                        "message", "Stock reservado correctamente"
+                )
         );
     }
 }
