@@ -1,1 +1,13 @@
+C:\Users\bpalm\MicroserviciosStorefit\orders-service\src\main\java\com\storefit\orders_service\Client\CatalogClient.java
+C:\Users\bpalm\MicroserviciosStorefit\orders-service\src\main\java\com\storefit\orders_service\Client\StockReservaItemDto.java
+C:\Users\bpalm\MicroserviciosStorefit\orders-service\src\main\java\com\storefit\orders_service\Config\RestClientConfig.java
+C:\Users\bpalm\MicroserviciosStorefit\orders-service\src\main\java\com\storefit\orders_service\Config\WebClientConfig.java
+C:\Users\bpalm\MicroserviciosStorefit\orders-service\src\main\java\com\storefit\orders_service\Controller\CompraController.java
+C:\Users\bpalm\MicroserviciosStorefit\orders-service\src\main\java\com\storefit\orders_service\Model\Compra.java
+C:\Users\bpalm\MicroserviciosStorefit\orders-service\src\main\java\com\storefit\orders_service\Model\CompraDetalle.java
+C:\Users\bpalm\MicroserviciosStorefit\orders-service\src\main\java\com\storefit\orders_service\Model\ProductoDTO.java
+C:\Users\bpalm\MicroserviciosStorefit\orders-service\src\main\java\com\storefit\orders_service\Model\UsuarioDTO.java
 C:\Users\bpalm\MicroserviciosStorefit\orders-service\src\main\java\com\storefit\orders_service\OrdersServiceApplication.java
+C:\Users\bpalm\MicroserviciosStorefit\orders-service\src\main\java\com\storefit\orders_service\Repository\CompraDetalleRepository.java
+C:\Users\bpalm\MicroserviciosStorefit\orders-service\src\main\java\com\storefit\orders_service\Repository\CompraRepository.java
+C:\Users\bpalm\MicroserviciosStorefit\orders-service\src\main\java\com\storefit\orders_service\Service\CompraService.java

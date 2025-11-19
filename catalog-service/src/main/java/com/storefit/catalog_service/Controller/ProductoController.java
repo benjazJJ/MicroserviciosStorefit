@@ -133,7 +133,7 @@ public class ProductoController {
             description = "Verifica que haya stock suficiente para todos los productos y descuenta el stock si todo está OK"
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Stock reservado correctamente"),
+            @ApiResponse(responseCode = "200", description = "Stock añadido correctamente"),
             @ApiResponse(responseCode = "400", description = "Datos inválidos o stock insuficiente"),
             @ApiResponse(responseCode = "404", description = "Algún producto no existe")
     })
