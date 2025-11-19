@@ -9,6 +9,16 @@
         },
         {
             "type": "java",
+<<<<<<< HEAD
+            "name": "UsersServiceApplication",
+            "request": "launch",
+            "mainClass": "com.storefit.users_service.UsersServiceApplication",
+            "projectName": "users-service"
+        },
+        {
+            "type": "java",
+=======
+>>>>>>> f695cf46d2b3f9bba4d12f87e1b449f8c5d525c6
             "name": "OrdersServiceApplication",
             "request": "launch",
             "mainClass": "com.storefit.orders_service.OrdersServiceApplication",

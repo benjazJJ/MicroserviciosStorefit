@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -32,17 +33,21 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 @Data
+@Schema(description = "Compra realizada por un usuario, con sus detalles")
 public class Compra {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Schema(description = "ID de la compra", example = "100")
     private Long idCompra;          // = @PrimaryKey(autoGenerate = true)
 
     @NotBlank
     @Column(nullable = false, length = 15)
+    @Schema(description = "RUT del usuario comprador", example = "12345678-9")
     private String rutUsuario;      
 
     @Column(nullable = false)
+    @Schema(description = "Fecha/hora de la compra en millis", example = "1717286400000")
     private Long fechaMillis;
 
     // Relación con los detalles de la compra
@@ -53,5 +58,6 @@ public class Compra {
     )
     @JsonManagedReference("compra-detalles")
     @Builder.Default
+    @Schema(description = "Ítems de la compra")
     private List<CompraDetalle> detalles = new ArrayList<>();
 }
