@@ -5,6 +5,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,6 +21,8 @@ import com.storefit.catalog_service.Model.Producto;
 import com.storefit.catalog_service.Model.ProductoId;
 import com.storefit.catalog_service.Service.ProductoService;
 import com.storefit.catalog_service.Service.StockReservaItem;
+import com.storefit.catalog_service.Service.StockInsuficienteException;
+ 
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -26,6 +31,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import jakarta.persistence.EntityNotFoundException;
 
 @RestController
 @RequestMapping("/api/v1/productos")
@@ -147,5 +153,28 @@ public class ProductoController {
                         "message", "Stock reservado correctamente"
                 )
         );
+    }
+
+    // Manejo de errores local al controlador
+    @ExceptionHandler(EntityNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleNotFound(EntityNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of("message", ex.getMessage() != null ? ex.getMessage() : "Recurso no encontrado"));
+    }
+
+    @ExceptionHandler({IllegalArgumentException.class, StockInsuficienteException.class})
+    public ResponseEntity<Map<String, Object>> handleBadRequest(RuntimeException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(Map.of("message", ex.getMessage() != null ? ex.getMessage() : "Solicitud inválida"));
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<Map<String, Object>> handleValidation(MethodArgumentNotValidException ex) {
+        String message = ex.getBindingResult().getFieldErrors().stream()
+                .findFirst()
+                .map(err -> err.getField() + ": " + err.getDefaultMessage())
+                .orElse("Datos inválidos");
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(Map.of("message", message));
     }
 }
