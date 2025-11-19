@@ -132,4 +132,43 @@ class ProductoServiceTest {
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("cantidad > 0");
     }
+
+    @Test
+    void create_cuandoIdDuplicado_lanzaIllegalArgumentConMensajeClaro() {
+        Producto p = Producto.builder()
+                .id(new ProductoId(1L, 1001L))
+                .marca("Marca")
+                .modelo("Modelo")
+                .color("Negro")
+                .talla("M")
+                .precio(1000)
+                .stock(1)
+                .build();
+
+        when(categoriaRepository.existsById(1L)).thenReturn(true);
+        when(productoRepository.existsById(p.getId())).thenReturn(true);
+
+        assertThatThrownBy(() -> service.create(p))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("El id de producto ya");
+    }
+
+    @Test
+    void findByIds_cuandoNoExiste_lanzaEntityNotFound() {
+        ProductoId id = new ProductoId(9L, 9999L);
+        when(productoRepository.findById(id)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.findByIds(9L, 9999L))
+                .isInstanceOf(EntityNotFoundException.class)
+                .hasMessageContaining("no encontrado");
+    }
+
+    @Test
+    void findByCategoria_cuandoCategoriaNoExiste_lanzaEntityNotFound() {
+        when(categoriaRepository.existsById(8L)).thenReturn(false);
+
+        assertThatThrownBy(() -> service.findByCategoria(8L))
+                .isInstanceOf(EntityNotFoundException.class)
+                .hasMessageContaining("no encontrada");
+    }
 }

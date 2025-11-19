@@ -38,6 +38,9 @@ public class ProductoService {
 
     @Transactional(readOnly = true)
     public List<Producto> findByCategoria(Long categoriaId) {
+        if (!categoriaRepo.existsById(categoriaId)) {
+            throw new EntityNotFoundException("Categoría no encontrada: " + categoriaId);
+        }
         return repo.findByIdIdCategoria(categoriaId);
     }
 

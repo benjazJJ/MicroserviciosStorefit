@@ -102,6 +102,16 @@ class ProductoControllerTest {
     }
 
     @Test
+    void byCategoria_debeRetornar404SiCategoriaNoExiste() throws Exception {
+        when(productoService.findByCategoria(999L))
+                .thenThrow(new jakarta.persistence.EntityNotFoundException("Categoría no encontrada: 999"));
+
+        mockMvc.perform(get("/api/v1/productos/categoria/{categoriaId}", 999L))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("Categoría no encontrada: 999"));
+    }
+
+    @Test
     void create_debeCrearProductoYRetornar201ConMensajeYData() throws Exception {
         var input = sampleProducto();
         var creado = sampleProducto(); // simulamos que es lo mismo que entró
