@@ -2,6 +2,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "CatalogServiceApplication",
+            "request": "launch",
+            "mainClass": "com.storefit.catalog_service.CatalogServiceApplication",
+            "projectName": "catalog-service"
+        },
+        {
+            "type": "java",
             "name": "OrdersServiceApplication",
             "request": "launch",
             "mainClass": "com.storefit.orders_service.OrdersServiceApplication",

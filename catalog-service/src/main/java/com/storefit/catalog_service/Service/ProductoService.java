@@ -55,7 +55,7 @@ public class ProductoService {
         }
 
         if (repo.existsById(p.getId())) {
-            throw new IllegalArgumentException("Ya existe producto con id: "
+            throw new IllegalArgumentException("El id de producto ya está en uso: "
                     + p.getId().getIdCategoria() + "/" + p.getId().getIdProducto());
         }
 
