@@ -9,6 +9,10 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Email;
 import lombok.*;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.springframework.http.HttpStatus;
@@ -24,10 +28,21 @@ public class RegistroController {
     private final UsuarioService usuarioService;
 
     @GetMapping("/by-usuario/{usuario}")
+    @Operation(summary = "Obtener registro por usuario (correo)")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Encontrado",
+            content = @Content(schema = @Schema(implementation = Registro.class))),
+        @ApiResponse(responseCode = "404", description = "No encontrado")
+    })
     public Registro byUsuario(@PathVariable String usuario) { return service.findByUsuario(usuario); }
 
     @PostMapping("/login")
     @Operation(summary = "Login por correo + contraseña", description = "Valida credenciales y devuelve datos de rol y perfil mínimo.")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Autenticado",
+            content = @Content(schema = @Schema(implementation = LoginResponse.class))),
+        @ApiResponse(responseCode = "400", description = "Credenciales inválidas")
+    })
     public LoginResponse login(@Valid @RequestBody LoginRequest req) {
         var reg = service.autenticarYObtener(req.getCorreo(), req.getContrasenia());
         var u = usuarioService.findByRut(reg.getRut());
@@ -38,6 +53,12 @@ public class RegistroController {
     @PostMapping("/registro-completo")
     @ResponseStatus(HttpStatus.CREATED)
     @org.springframework.transaction.annotation.Transactional
+    @Operation(summary = "Registro completo", description = "Crea perfil Usuario + Registro credenciales")
+    @ApiResponses({
+        @ApiResponse(responseCode = "201", description = "Creado",
+            content = @Content(schema = @Schema(implementation = Registro.class))),
+        @ApiResponse(responseCode = "400", description = "Datos inválidos")
+    })
     public RegistroCompletoResponse registroCompleto(@Valid @RequestBody RegistroCompletoRequest req) {
         if (!req.getContrasenia().equals(req.getConfirmarContrasenia())) {
             throw new IllegalArgumentException("Las contraseñas no coinciden");
