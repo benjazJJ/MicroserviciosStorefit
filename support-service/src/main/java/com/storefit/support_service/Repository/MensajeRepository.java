@@ -9,16 +9,16 @@ import com.storefit.support_service.Model.Mensaje;
 public interface MensajeRepository extends JpaRepository<Mensaje, Long> {
 
     // Bandeja SOPORTE: mensajes originales de clientes (no respuestas)
-    List<Mensaje> findByTargetRoleIdAndIsResponseFalseOrderByCreatedAtAsc(Integer targetRoleId);
-    List<Mensaje> findByTargetRoleIdAndIsResponseFalseOrderByCreatedAtDesc(Integer targetRoleId);
+    List<Mensaje> findByIdRolDestinoAndEsRespuestaFalseOrderByCreadoEnAsc(Integer idRolDestino);
+    List<Mensaje> findByIdRolDestinoAndEsRespuestaFalseOrderByCreadoEnDesc(Integer idRolDestino);
 
     // Bandeja CLIENTE: sus mensajes originales (no respuestas)
-    List<Mensaje> findBySenderUserIdAndIsResponseFalseOrderByCreatedAtAsc(Long senderUserId);
-    List<Mensaje> findBySenderUserIdAndIsResponseFalseOrderByCreatedAtDesc(Long senderUserId);
+    List<Mensaje> findByRutRemitenteAndEsRespuestaFalseOrderByCreadoEnAsc(String rutRemitente);
+    List<Mensaje> findByRutRemitenteAndEsRespuestaFalseOrderByCreadoEnDesc(String rutRemitente);
 
     // Hilo completo
-    List<Mensaje> findByThreadIdOrderByCreatedAtAsc(Long threadId);
+    List<Mensaje> findByIdHiloOrderByCreadoEnAsc(Long idHilo);
 
     // Respuestas a un mensaje
-    List<Mensaje> findByRepliedToIdAndIsResponseTrueOrderByCreatedAtAsc(Long repliedToId);
+    List<Mensaje> findByRespondeAIdAndEsRespuestaTrueOrderByCreadoEnAsc(Long respondeAId);
 }

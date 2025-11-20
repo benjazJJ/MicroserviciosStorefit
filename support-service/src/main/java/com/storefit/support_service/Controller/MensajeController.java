@@ -93,8 +93,8 @@ public class MensajeController {
     public ResponseEntity<Mensaje> enviarMensajeCliente(
             @RequestBody EnviarMensajeRequest request) {
         Mensaje creado = service.enviarMensajeCliente(
-                request.getSenderUserId(),
-                request.getContent());
+                request.getRutRemitente(),
+                request.getContenido());
         return ResponseEntity.status(HttpStatus.CREATED).body(creado);
     }
 
@@ -110,8 +110,8 @@ public class MensajeController {
             @RequestBody ResponderMensajeRequest request) {
         Mensaje respuesta = service.responderMensaje(
                 originalId,
-                request.getSoporteUserId(),
-                request.getContent());
+                request.getRutSoporte(),
+                request.getContenido());
         return ResponseEntity.status(HttpStatus.CREATED).body(respuesta);
     }
 
@@ -126,26 +126,26 @@ public class MensajeController {
         return service.bandejaSoporte(asc);
     }
 
-    @GetMapping("/usuario/{usuarioId}/bandeja")
+    @GetMapping("/usuario/{rut}/bandeja")
     @Operation(summary = "Bandeja de un cliente")
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "OK",
             content = @Content(schema = @Schema(implementation = MensajeConRespuestaDTO.class)))
     })
     public List<MensajeConRespuestaDTO> bandejaUsuario(
-            @PathVariable Long usuarioId,
+            @PathVariable String rut,
             @RequestParam(defaultValue = "false") boolean asc) {
-        return service.bandejaUsuario(usuarioId, asc);
+        return service.bandejaUsuario(rut, asc);
     }
 
-    @GetMapping("/hilos/{threadId}")
+    @GetMapping("/hilos/{idHilo}")
     @Operation(summary = "Obtener un hilo completo")
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "OK",
             content = @Content(schema = @Schema(implementation = Mensaje.class)))
     })
-    public List<Mensaje> mensajesPorThread(@PathVariable Long threadId) {
-        return service.mensajesPorThread(threadId);
+    public List<Mensaje> mensajesPorThread(@PathVariable Long idHilo) {
+        return service.mensajesPorThread(idHilo);
     }
 
     // ---------- DTOs de entrada ----------
@@ -153,18 +153,18 @@ public class MensajeController {
     @Data
     @Schema(description = "Solicitud de envío de mensaje de cliente a soporte")
     public static class EnviarMensajeRequest {
-        @Schema(description = "ID del usuario que envía", example = "5001")
-        private Long senderUserId;
+        @Schema(description = "RUT del remitente", example = "12345678-9")
+        private String rutRemitente;
         @Schema(description = "Contenido", example = "Tengo un problema con mi pedido")
-        private String content;
+        private String contenido;
     }
 
     @Data
     @Schema(description = "Solicitud de respuesta de soporte a un mensaje")
     public static class ResponderMensajeRequest {
-        @Schema(description = "ID del usuario de soporte", example = "9001")
-        private Long soporteUserId;
+        @Schema(description = "RUT del usuario de soporte", example = "11111111-1")
+        private String rutSoporte;
         @Schema(description = "Contenido de la respuesta", example = "Te contactaremos a la brevedad")
-        private String content;
+        private String contenido;
     }
 }

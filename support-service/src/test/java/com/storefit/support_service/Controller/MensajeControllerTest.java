@@ -39,23 +39,23 @@ public class MensajeControllerTest {
 
     private Mensaje crearMensaje(
             Long id,
-            Long senderUserId,
-            Integer targetRoleId,
-            Long targetUserId,
-            String content,
-            boolean isResponse) {
+            String rutRemitente,
+            Integer idRolDestino,
+            String rutDestino,
+            String contenido,
+            boolean esRespuesta) {
         Mensaje m = new Mensaje();
         m.setId(id);
-        m.setSenderUserId(senderUserId);
-        m.setTargetRoleId(targetRoleId);
-        m.setTargetUserId(targetUserId);
-        m.setContent(content);
-        m.setCreatedAt(1763074750001L);
-        m.setRead(false);
-        m.setIsResponse(isResponse);
-        m.setRepliedToId(isResponse ? 1L : null);
-        m.setThreadId(1L);
-        m.setRespondedAt(null);
+        m.setRutRemitente(rutRemitente);
+        m.setIdRolDestino(idRolDestino);
+        m.setRutDestino(rutDestino);
+        m.setContenido(contenido);
+        m.setCreadoEn(1763074750001L);
+        m.setLeido(false);
+        m.setEsRespuesta(esRespuesta);
+        m.setRespondeAId(esRespuesta ? 1L : null);
+        m.setIdHilo(1L);
+        m.setRespondidoEn(null);
         return m;
     }
 
@@ -63,8 +63,8 @@ public class MensajeControllerTest {
 
     @Test
     void listar_deberiaRetornarListaMensajes() throws Exception {
-        Mensaje m1 = crearMensaje(1L, 1L, 3, null, "Hola soporte", false);
-        Mensaje m2 = crearMensaje(2L, 2L, 3, null, "Otro mensaje", false);
+        Mensaje m1 = crearMensaje(1L, "11111111-1", 3, null, "Hola soporte", false);
+        Mensaje m2 = crearMensaje(2L, "22222222-2", 3, null, "Otro mensaje", false);
 
         when(mensajeService.listarTodos()).thenReturn(List.of(m1, m2));
 
@@ -72,7 +72,7 @@ public class MensajeControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$[0].id").value(1))
-                .andExpect(jsonPath("$[0].content").value("Hola soporte"))
+                .andExpect(jsonPath("$[0].contenido").value("Hola soporte"))
                 .andExpect(jsonPath("$[1].id").value(2));
     }
 
@@ -80,7 +80,7 @@ public class MensajeControllerTest {
 
     @Test
     void porId_deberiaRetornarMensajePorId() throws Exception {
-        Mensaje m1 = crearMensaje(1L, 1L, 3, null, "Hola soporte", false);
+        Mensaje m1 = crearMensaje(1L, "11111111-1", 3, null, "Hola soporte", false);
 
         when(mensajeService.obtenerPorId(1L)).thenReturn(m1);
 
@@ -88,7 +88,7 @@ public class MensajeControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.content").value("Hola soporte"));
+                .andExpect(jsonPath("$.contenido").value("Hola soporte"));
     }
 
     // ---------- DELETE /api/v1/mensajes/{id} ----------
@@ -105,28 +105,28 @@ public class MensajeControllerTest {
 
     @Test
     void marcarLeido_deberiaRetornarMensajeActualizado() throws Exception {
-        Mensaje leido = crearMensaje(1L, 1L, 3, null, "Hola soporte", false);
-        leido.setRead(true);
+        Mensaje leido = crearMensaje(1L, "11111111-1", 3, null, "Hola soporte", false);
+        leido.setLeido(true);
 
         when(mensajeService.marcarComoLeido(1L)).thenReturn(leido);
 
         mockMvc.perform(patch("/api/v1/mensajes/{id}/leido", 1L))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.read").value(true));
+                .andExpect(jsonPath("$.leido").value(true));
     }
 
     // ---------- POST /api/v1/mensajes/cliente ----------
 
     @Test
     void enviarMensajeCliente_deberiaCrearMensaje() throws Exception {
-        Mensaje creado = crearMensaje(1L, 1L, 3, null, "Hola, tengo un problema", false);
+        Mensaje creado = crearMensaje(1L, "12345678-9", 3, null, "Hola, tengo un problema", false);
 
         MensajeController.EnviarMensajeRequest request = new MensajeController.EnviarMensajeRequest();
-        request.setSenderUserId(1L);
-        request.setContent("Hola, tengo un problema");
+        request.setRutRemitente("12345678-9");
+        request.setContenido("Hola, tengo un problema");
 
-        when(mensajeService.enviarMensajeCliente(1L, "Hola, tengo un problema"))
+        when(mensajeService.enviarMensajeCliente("12345678-9", "Hola, tengo un problema"))
                 .thenReturn(creado);
 
         mockMvc.perform(post("/api/v1/mensajes/cliente")
@@ -135,22 +135,22 @@ public class MensajeControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.senderUserId").value(1))
-                .andExpect(jsonPath("$.content").value("Hola, tengo un problema"));
+                .andExpect(jsonPath("$.rutRemitente").value("12345678-9"))
+                .andExpect(jsonPath("$.contenido").value("Hola, tengo un problema"));
     }
 
     // ---------- POST /api/v1/mensajes/soporte/{originalId}/respuesta ----------
 
     @Test
     void responderMensaje_deberiaCrearRespuesta() throws Exception {
-        Mensaje respuesta = crearMensaje(2L, 9001L, null, 1L,
+        Mensaje respuesta = crearMensaje(2L, "11111111-1", null, "12345678-9",
                 "Hola, revisamos tu caso", true);
 
         MensajeController.ResponderMensajeRequest request = new MensajeController.ResponderMensajeRequest();
-        request.setSoporteUserId(9001L);
-        request.setContent("Hola, revisamos tu caso");
+        request.setRutSoporte("11111111-1");
+        request.setContenido("Hola, revisamos tu caso");
 
-        when(mensajeService.responderMensaje(1L, 9001L, "Hola, revisamos tu caso"))
+        when(mensajeService.responderMensaje(1L, "11111111-1", "Hola, revisamos tu caso"))
                 .thenReturn(respuesta);
 
         mockMvc.perform(post("/api/v1/mensajes/soporte/{originalId}/respuesta", 1L)
@@ -159,17 +159,17 @@ public class MensajeControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id").value(2))
-                .andExpect(jsonPath("$.senderUserId").value(9001))
-                .andExpect(jsonPath("$.targetUserId").value(1))
-                .andExpect(jsonPath("$.isResponse").value(true));
+                .andExpect(jsonPath("$.rutRemitente").value("11111111-1"))
+                .andExpect(jsonPath("$.rutDestino").value("12345678-9"))
+                .andExpect(jsonPath("$.esRespuesta").value(true));
     }
 
     // ---------- GET /api/v1/mensajes/soporte/bandeja ----------
 
     @Test
     void bandejaSoporte_deberiaRetornarListaMensajesConRespuesta() throws Exception {
-        Mensaje original = crearMensaje(1L, 1L, 3, null, "Hola soporte", false);
-        Mensaje resp = crearMensaje(2L, 9001L, null, 1L, "Respuesta soporte", true);
+        Mensaje original = crearMensaje(1L, "12345678-9", 3, null, "Hola soporte", false);
+        Mensaje resp = crearMensaje(2L, "11111111-1", null, "12345678-9", "Respuesta soporte", true);
 
         MensajeConRespuestaDTO dto = new MensajeConRespuestaDTO(original, resp);
 
@@ -180,24 +180,24 @@ public class MensajeControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$[0].clienteMensaje.id").value(1))
-                .andExpect(jsonPath("$[0].clienteMensaje.content").value("Hola soporte"))
+                .andExpect(jsonPath("$[0].clienteMensaje.contenido").value("Hola soporte"))
                 .andExpect(jsonPath("$[0].respuesta.id").value(2))
-                .andExpect(jsonPath("$[0].respuesta.content").value("Respuesta soporte"));
+                .andExpect(jsonPath("$[0].respuesta.contenido").value("Respuesta soporte"));
     }
 
-    // ---------- GET /api/v1/mensajes/usuario/{usuarioId}/bandeja ----------
+    // ---------- GET /api/v1/mensajes/usuario/{rut}/bandeja ----------
 
     @Test
     void bandejaUsuario_deberiaRetornarListaMensajesConRespuesta() throws Exception {
-        Mensaje original = crearMensaje(1L, 1L, 3, null, "Hola soporte", false);
-        Mensaje resp = crearMensaje(2L, 9001L, null, 1L, "Respuesta soporte", true);
+        Mensaje original = crearMensaje(1L, "12345678-9", 3, null, "Hola soporte", false);
+        Mensaje resp = crearMensaje(2L, "11111111-1", null, "12345678-9", "Respuesta soporte", true);
 
         MensajeConRespuestaDTO dto = new MensajeConRespuestaDTO(original, resp);
 
-        when(mensajeService.bandejaUsuario(1L, false))
+        when(mensajeService.bandejaUsuario("12345678-9", false))
                 .thenReturn(List.of(dto));
 
-        mockMvc.perform(get("/api/v1/mensajes/usuario/{usuarioId}/bandeja", 1L))
+        mockMvc.perform(get("/api/v1/mensajes/usuario/{rut}/bandeja", "12345678-9"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$[0].clienteMensaje.id").value(1))
@@ -208,17 +208,17 @@ public class MensajeControllerTest {
 
     @Test
     void mensajesPorThread_deberiaRetornarListaMensajes() throws Exception {
-        Mensaje original = crearMensaje(1L, 1L, 3, null, "Hola soporte", false);
-        Mensaje resp = crearMensaje(2L, 9001L, null, 1L, "Respuesta soporte", true);
+        Mensaje original = crearMensaje(1L, "12345678-9", 3, null, "Hola soporte", false);
+        Mensaje resp = crearMensaje(2L, "11111111-1", null, "12345678-9", "Respuesta soporte", true);
 
         when(mensajeService.mensajesPorThread(1L))
                 .thenReturn(List.of(original, resp));
 
-        mockMvc.perform(get("/api/v1/mensajes/hilos/{threadId}", 1L))
+        mockMvc.perform(get("/api/v1/mensajes/hilos/{idHilo}", 1L))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$[0].id").value(1))
                 .andExpect(jsonPath("$[1].id").value(2))
-                .andExpect(jsonPath("$[1].isResponse").value(true));
+                .andExpect(jsonPath("$[1].esRespuesta").value(true));
     }
 }
