@@ -11,6 +11,10 @@ import com.storefit.users_service.Service.RolService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RequestHeader;
+
+import com.storefit.users_service.security.Authorization;
+import com.storefit.users_service.security.RequestUser;
 
 import java.util.List;
 
@@ -28,7 +32,13 @@ public class RolController {
         @ApiResponse(responseCode = "200", description = "OK",
             content = @Content(schema = @Schema(implementation = Rol.class)))
     })
-    public List<Rol> all() { return service.findAll(); }
+    public List<Rol> all(
+            @RequestHeader("X-User-Rut") String headerRut,
+            @RequestHeader("X-User-Rol") String headerRol) {
+        RequestUser user = Authorization.fromHeaders(headerRut, headerRol);
+        Authorization.requireAdmin(user);
+        return service.findAll();
+    }
 
     @GetMapping("/{id}")
     @Operation(summary = "Obtener rol por ID")
@@ -37,5 +47,11 @@ public class RolController {
             content = @Content(schema = @Schema(implementation = Rol.class))),
         @ApiResponse(responseCode = "404", description = "No encontrado")
     })
-    public Rol byId(@PathVariable Long id) { return service.findById(id); }
+    public Rol byId(@PathVariable Long id,
+                    @RequestHeader("X-User-Rut") String headerRut,
+                    @RequestHeader("X-User-Rol") String headerRol) {
+        RequestUser user = Authorization.fromHeaders(headerRut, headerRol);
+        Authorization.requireAdmin(user);
+        return service.findById(id);
+    }
 }

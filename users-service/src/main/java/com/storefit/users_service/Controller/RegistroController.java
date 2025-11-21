@@ -17,6 +17,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RequestHeader;
+
+import com.storefit.users_service.security.Authorization;
+import com.storefit.users_service.security.RequestUser;
 
 @RestController
 @RequestMapping("/api/v1/registros")
@@ -34,7 +38,13 @@ public class RegistroController {
             content = @Content(schema = @Schema(implementation = Registro.class))),
         @ApiResponse(responseCode = "404", description = "No encontrado")
     })
-    public Registro byUsuario(@PathVariable String usuario) { return service.findByUsuario(usuario); }
+    public Registro byUsuario(@PathVariable String usuario,
+                              @RequestHeader("X-User-Rut") String headerRut,
+                              @RequestHeader("X-User-Rol") String headerRol) {
+        RequestUser user = Authorization.fromHeaders(headerRut, headerRol);
+        Authorization.requireAdmin(user);
+        return service.findByUsuario(usuario);
+    }
 
     @PostMapping("/login")
     @Operation(summary = "Login por correo + contraseña", description = "Valida credenciales y devuelve datos de rol y perfil mínimo.")

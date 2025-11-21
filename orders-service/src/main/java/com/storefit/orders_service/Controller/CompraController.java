@@ -9,10 +9,13 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.storefit.orders_service.Model.Compra;
 import com.storefit.orders_service.Service.CompraService;
+import com.storefit.orders_service.security.Authorization;
+import com.storefit.orders_service.security.RequestUser;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -37,7 +40,11 @@ public class CompraController {
         @ApiResponse(responseCode = "200", description = "OK",
             content = @Content(schema = @Schema(implementation = Compra.class)))
     })
-    public List<Compra> all() {
+    public List<Compra> all(
+            @RequestHeader("X-User-Rut") String headerRut,
+            @RequestHeader("X-User-Rol") String headerRol) {
+        RequestUser user = Authorization.fromHeaders(headerRut, headerRol);
+        Authorization.requireAdmin(user);
         return service.listarTodas();
     }
 
@@ -48,8 +55,17 @@ public class CompraController {
             content = @Content(schema = @Schema(implementation = Compra.class))),
         @ApiResponse(responseCode = "404", description = "No encontrada")
     })
-    public ResponseEntity<Compra> byId(@PathVariable Long id) {
-        return ResponseEntity.ok(service.obtenerPorId(id));
+    public ResponseEntity<Compra> byId(@PathVariable Long id,
+            @RequestHeader("X-User-Rut") String headerRut,
+            @RequestHeader("X-User-Rol") String headerRol) {
+        var compra = service.obtenerPorId(id);
+        RequestUser user = Authorization.fromHeaders(headerRut, headerRol);
+        if (!(user.isAdmin() || user.getRut().equalsIgnoreCase(compra.getRutUsuario()))) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.FORBIDDEN,
+                    "No autorizado para ver esta compra");
+        }
+        return ResponseEntity.ok(compra);
     }
 
     @GetMapping("/usuario/{rut}")
@@ -58,7 +74,11 @@ public class CompraController {
         @ApiResponse(responseCode = "200", description = "OK",
             content = @Content(schema = @Schema(implementation = Compra.class)))
     })
-    public List<Compra> byRut(@PathVariable String rut) {
+    public List<Compra> byRut(@PathVariable String rut,
+            @RequestHeader("X-User-Rut") String headerRut,
+            @RequestHeader("X-User-Rol") String headerRol) {
+        RequestUser user = Authorization.fromHeaders(headerRut, headerRol);
+        Authorization.requireOwnerOrAdmin(user, rut);
         return service.historialPorRut(rut);
     }
 
@@ -68,7 +88,11 @@ public class CompraController {
         @ApiResponse(responseCode = "200", description = "OK",
             content = @Content(schema = @Schema(implementation = Integer.class)))
     })
-    public Integer totalPorRut(@PathVariable String rut) {
+    public Integer totalPorRut(@PathVariable String rut,
+            @RequestHeader("X-User-Rut") String headerRut,
+            @RequestHeader("X-User-Rol") String headerRol) {
+        RequestUser user = Authorization.fromHeaders(headerRut, headerRol);
+        Authorization.requireOwnerOrAdmin(user, rut);
         return service.totalGastado(rut);
     }
 
@@ -81,7 +105,17 @@ public class CompraController {
         @ApiResponse(responseCode = "404", description = "Usuario o producto no encontrado"),
         @ApiResponse(responseCode = "503", description = "Servicios externos no disponibles")
     })
-    public ResponseEntity<Compra> create(@RequestBody @Valid Compra compra) {
+    public ResponseEntity<Compra> create(
+            @RequestHeader("X-User-Rut") String headerRut,
+            @RequestHeader("X-User-Rol") String headerRol,
+            @RequestBody @Valid Compra compra) {
+        RequestUser user = Authorization.fromHeaders(headerRut, headerRol);
+        Authorization.requireCliente(user);
+        if (!user.getRut().equalsIgnoreCase(compra.getRutUsuario())) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.FORBIDDEN,
+                    "No puedes crear compras para otro usuario");
+        }
         Compra creada = service.crearCompra(compra);
         return ResponseEntity
                 .created(URI.create("/api/v1/compras/" + creada.getIdCompra()))

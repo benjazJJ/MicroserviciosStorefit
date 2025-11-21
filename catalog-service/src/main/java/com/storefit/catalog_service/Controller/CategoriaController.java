@@ -16,6 +16,10 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.*;
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.web.bind.annotation.RequestHeader;
+
+import com.storefit.catalog_service.security.Authorization;
+import com.storefit.catalog_service.security.RequestUser;
 
 import java.net.URI;
 import java.util.List;
@@ -34,7 +38,11 @@ public class CategoriaController {
             content = @Content(schema = @Schema(implementation = Categoria.class)))
     })
     @GetMapping
-    public ResponseEntity<List<Categoria>> all() {
+    public ResponseEntity<List<Categoria>> all(
+            @RequestHeader("X-User-Rut") String headerRut,
+            @RequestHeader("X-User-Rol") String headerRol) {
+        RequestUser user = Authorization.fromHeaders(headerRut, headerRol);
+        Authorization.requireAdmin(user);
         return ResponseEntity.ok(service.findAll());
     }
 
@@ -45,7 +53,11 @@ public class CategoriaController {
         @ApiResponse(responseCode = "404", description = "No encontrada")
     })
     @GetMapping("/{id}")
-    public ResponseEntity<Categoria> byId(@PathVariable Long id) {
+    public ResponseEntity<Categoria> byId(@PathVariable Long id,
+            @RequestHeader("X-User-Rut") String headerRut,
+            @RequestHeader("X-User-Rol") String headerRol) {
+        RequestUser user = Authorization.fromHeaders(headerRut, headerRol);
+        Authorization.requireAdmin(user);
         return ResponseEntity.ok(service.findById(id));
     }
 
@@ -56,7 +68,12 @@ public class CategoriaController {
         @ApiResponse(responseCode = "400", description = "Solicitud inválida")
     })
     @PostMapping
-    public ResponseEntity<Map<String, Object>> create(@Valid @RequestBody Categoria c) {
+    public ResponseEntity<Map<String, Object>> create(
+            @RequestHeader("X-User-Rut") String headerRut,
+            @RequestHeader("X-User-Rol") String headerRol,
+            @Valid @RequestBody Categoria c) {
+        RequestUser user = Authorization.fromHeaders(headerRut, headerRol);
+        Authorization.requireAdmin(user);
         var created = service.create(c);
         var location = URI.create("/api/v1/categorias/" + created.getIdCategoria());
         return ResponseEntity.created(location).body(
@@ -74,7 +91,13 @@ public class CategoriaController {
         @ApiResponse(responseCode = "404", description = "No encontrada")
     })
     @PutMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> update(@PathVariable Long id, @Valid @RequestBody Categoria c) {
+    public ResponseEntity<Map<String, Object>> update(
+            @PathVariable Long id,
+            @RequestHeader("X-User-Rut") String headerRut,
+            @RequestHeader("X-User-Rol") String headerRol,
+            @Valid @RequestBody Categoria c) {
+        RequestUser user = Authorization.fromHeaders(headerRut, headerRol);
+        Authorization.requireAdmin(user);
         var updated = service.update(id, c);
         return ResponseEntity.ok(
             Map.of(
@@ -90,7 +113,12 @@ public class CategoriaController {
         @ApiResponse(responseCode = "404", description = "No encontrada")
     })
     @DeleteMapping("/{id}")
-    public ResponseEntity<Map<String, String>> delete(@PathVariable Long id) {
+    public ResponseEntity<Map<String, String>> delete(
+            @PathVariable Long id,
+            @RequestHeader("X-User-Rut") String headerRut,
+            @RequestHeader("X-User-Rol") String headerRol) {
+        RequestUser user = Authorization.fromHeaders(headerRut, headerRol);
+        Authorization.requireAdmin(user);
         service.delete(id);
         return ResponseEntity.ok(
             Map.of("message", "Categoría eliminada correctamente")
