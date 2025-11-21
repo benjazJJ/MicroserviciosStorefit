@@ -39,10 +39,10 @@ public class RegistroController {
         @ApiResponse(responseCode = "404", description = "No encontrado")
     })
     public Registro byUsuario(@PathVariable String usuario,
-                              @RequestHeader("X-User-Rut") String headerRut,
-                              @RequestHeader("X-User-Rol") String headerRol) {
-        RequestUser user = Authorization.fromHeaders(headerRut, headerRol);
-        Authorization.requireAdmin(user);
+                              @RequestHeader("X-User-Rut") String headerRut,   // Header con RUT autenticado
+                              @RequestHeader("X-User-Rol") String headerRol) { // Header con rol autenticado
+        RequestUser user = Authorization.fromHeaders(headerRut, headerRol); // Valida headers
+        Authorization.requireAdmin(user); // Solo ADMIN puede ver registros
         return service.findByUsuario(usuario);
     }
 

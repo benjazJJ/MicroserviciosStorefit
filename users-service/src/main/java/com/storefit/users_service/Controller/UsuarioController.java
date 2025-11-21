@@ -34,10 +34,10 @@ public class UsuarioController {
             content = @Content(schema = @Schema(implementation = Usuario.class)))
     })
     public List<Usuario> all(
-            @RequestHeader("X-User-Rut") String headerRut,
-            @RequestHeader("X-User-Rol") String headerRol) {
-        RequestUser user = Authorization.fromHeaders(headerRut, headerRol);
-        Authorization.requireAdmin(user);
+            @RequestHeader("X-User-Rut") String headerRut,   // Header con RUT autenticado
+            @RequestHeader("X-User-Rol") String headerRol) { // Header con rol autenticado
+        RequestUser user = Authorization.fromHeaders(headerRut, headerRol); // Valida headers
+        Authorization.requireAdmin(user); // Solo ADMIN
         return service.findAll();
     }
 
@@ -49,10 +49,10 @@ public class UsuarioController {
         @ApiResponse(responseCode = "404", description = "No encontrado")
     })
     public Usuario byRut(@PathVariable String rut,
-                         @RequestHeader("X-User-Rut") String headerRut,
-                         @RequestHeader("X-User-Rol") String headerRol) {
-        RequestUser user = Authorization.fromHeaders(headerRut, headerRol);
-        Authorization.requireOwnerOrAdmin(user, rut);
+                         @RequestHeader("X-User-Rut") String headerRut,   // Header con RUT autenticado
+                         @RequestHeader("X-User-Rol") String headerRol) { // Header con rol autenticado
+        RequestUser user = Authorization.fromHeaders(headerRut, headerRol); // Valida headers
+        Authorization.requireOwnerOrAdmin(user, rut); // Dueño o ADMIN
         return service.findByRut(rut);
     }
 
@@ -64,10 +64,10 @@ public class UsuarioController {
         @ApiResponse(responseCode = "404", description = "No encontrado")
     })
     public Usuario byCorreo(@PathVariable String correo,
-                            @RequestHeader("X-User-Rut") String headerRut,
-                            @RequestHeader("X-User-Rol") String headerRol) {
+                            @RequestHeader("X-User-Rut") String headerRut,   // Header con RUT autenticado
+                            @RequestHeader("X-User-Rol") String headerRol) { // Header con rol autenticado
         Usuario u = service.findByCorreo(correo);
-        RequestUser user = Authorization.fromHeaders(headerRut, headerRol);
+        RequestUser user = Authorization.fromHeaders(headerRut, headerRol); // Valida headers
         if (!(user.isAdmin() || (u.getRut() != null && u.getRut().equalsIgnoreCase(user.getRut())))) {
             throw new org.springframework.web.server.ResponseStatusException(
                     org.springframework.http.HttpStatus.FORBIDDEN,
@@ -86,11 +86,11 @@ public class UsuarioController {
         @ApiResponse(responseCode = "400", description = "Datos inválidos")
     })
     public Usuario updateRol(@PathVariable String rut,
-                             @RequestHeader("X-User-Rut") String headerRut,
-                             @RequestHeader("X-User-Rol") String headerRol,
+                             @RequestHeader("X-User-Rut") String headerRut,   // Header con RUT autenticado
+                             @RequestHeader("X-User-Rol") String headerRol,  // Header con rol autenticado
                              @Valid @RequestBody UpdateRolRequest req) {
-        RequestUser user = Authorization.fromHeaders(headerRut, headerRol);
-        Authorization.requireAdmin(user);
+        RequestUser user = Authorization.fromHeaders(headerRut, headerRol); // Valida headers
+        Authorization.requireAdmin(user); // Solo ADMIN
         service.updateRol(rut, req.getRolId());
         return service.findByRut(rut);
     }

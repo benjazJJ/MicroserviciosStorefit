@@ -124,11 +124,11 @@ public class MensajeController {
         @ApiResponse(responseCode = "400", description = "Datos inválidos")
     })
     public ResponseEntity<Mensaje> enviarMensajeCliente(
-            @RequestHeader("X-User-Rut") String headerRut,
-            @RequestHeader("X-User-Rol") String headerRol,
+            @RequestHeader("X-User-Rut") String headerRut,   // Header con RUT autenticado
+            @RequestHeader("X-User-Rol") String headerRol,  // Header con rol autenticado
             @RequestBody EnviarMensajeRequest request) {
-        RequestUser user = Authorization.fromHeaders(headerRut, headerRol);
-        Authorization.requireCliente(user);
+        RequestUser user = Authorization.fromHeaders(headerRut, headerRol); // Valida headers
+        Authorization.requireCliente(user); // Solo CLIENTE
         if (request.getRutRemitente() == null || !user.getRut().equalsIgnoreCase(request.getRutRemitente())) {
             throw new org.springframework.web.server.ResponseStatusException(
                     org.springframework.http.HttpStatus.FORBIDDEN,
@@ -149,11 +149,11 @@ public class MensajeController {
     })
     public ResponseEntity<Mensaje> responderMensaje(
             @PathVariable Long originalId,
-            @RequestHeader("X-User-Rut") String headerRut,
-            @RequestHeader("X-User-Rol") String headerRol,
+            @RequestHeader("X-User-Rut") String headerRut,   // Header con RUT autenticado
+            @RequestHeader("X-User-Rol") String headerRol,  // Header con rol autenticado
             @RequestBody ResponderMensajeRequest request) {
-        RequestUser user = Authorization.fromHeaders(headerRut, headerRol);
-        Authorization.requireSupport(user);
+        RequestUser user = Authorization.fromHeaders(headerRut, headerRol); // Valida headers
+        Authorization.requireSupport(user); // Solo SOPORTE
         if (request.getRutSoporte() == null || !user.getRut().equalsIgnoreCase(request.getRutSoporte())) {
             throw new org.springframework.web.server.ResponseStatusException(
                     org.springframework.http.HttpStatus.FORBIDDEN,

@@ -41,10 +41,10 @@ public class CompraController {
             content = @Content(schema = @Schema(implementation = Compra.class)))
     })
     public List<Compra> all(
-            @RequestHeader("X-User-Rut") String headerRut,
-            @RequestHeader("X-User-Rol") String headerRol) {
-        RequestUser user = Authorization.fromHeaders(headerRut, headerRol);
-        Authorization.requireAdmin(user);
+            @RequestHeader("X-User-Rut") String headerRut,   // Header con RUT autenticado
+            @RequestHeader("X-User-Rol") String headerRol) { // Header con rol autenticado
+        RequestUser user = Authorization.fromHeaders(headerRut, headerRol); // Valida headers
+        Authorization.requireAdmin(user); // Solo ADMIN
         return service.listarTodas();
     }
 
@@ -56,10 +56,10 @@ public class CompraController {
         @ApiResponse(responseCode = "404", description = "No encontrada")
     })
     public ResponseEntity<Compra> byId(@PathVariable Long id,
-            @RequestHeader("X-User-Rut") String headerRut,
-            @RequestHeader("X-User-Rol") String headerRol) {
+            @RequestHeader("X-User-Rut") String headerRut,   // Header con RUT autenticado
+            @RequestHeader("X-User-Rol") String headerRol) { // Header con rol autenticado
         var compra = service.obtenerPorId(id);
-        RequestUser user = Authorization.fromHeaders(headerRut, headerRol);
+        RequestUser user = Authorization.fromHeaders(headerRut, headerRol); // Valida headers
         if (!(user.isAdmin() || user.getRut().equalsIgnoreCase(compra.getRutUsuario()))) {
             throw new org.springframework.web.server.ResponseStatusException(
                     org.springframework.http.HttpStatus.FORBIDDEN,
@@ -75,10 +75,10 @@ public class CompraController {
             content = @Content(schema = @Schema(implementation = Compra.class)))
     })
     public List<Compra> byRut(@PathVariable String rut,
-            @RequestHeader("X-User-Rut") String headerRut,
-            @RequestHeader("X-User-Rol") String headerRol) {
-        RequestUser user = Authorization.fromHeaders(headerRut, headerRol);
-        Authorization.requireOwnerOrAdmin(user, rut);
+            @RequestHeader("X-User-Rut") String headerRut,   // Header con RUT autenticado
+            @RequestHeader("X-User-Rol") String headerRol) { // Header con rol autenticado
+        RequestUser user = Authorization.fromHeaders(headerRut, headerRol); // Valida headers
+        Authorization.requireOwnerOrAdmin(user, rut); // Dueño o ADMIN
         return service.historialPorRut(rut);
     }
 
@@ -89,10 +89,10 @@ public class CompraController {
             content = @Content(schema = @Schema(implementation = Integer.class)))
     })
     public Integer totalPorRut(@PathVariable String rut,
-            @RequestHeader("X-User-Rut") String headerRut,
-            @RequestHeader("X-User-Rol") String headerRol) {
-        RequestUser user = Authorization.fromHeaders(headerRut, headerRol);
-        Authorization.requireOwnerOrAdmin(user, rut);
+            @RequestHeader("X-User-Rut") String headerRut,   // Header con RUT autenticado
+            @RequestHeader("X-User-Rol") String headerRol) { // Header con rol autenticado
+        RequestUser user = Authorization.fromHeaders(headerRut, headerRol); // Valida headers
+        Authorization.requireOwnerOrAdmin(user, rut); // Dueño o ADMIN
         return service.totalGastado(rut);
     }
 
@@ -106,11 +106,11 @@ public class CompraController {
         @ApiResponse(responseCode = "503", description = "Servicios externos no disponibles")
     })
     public ResponseEntity<Compra> create(
-            @RequestHeader("X-User-Rut") String headerRut,
-            @RequestHeader("X-User-Rol") String headerRol,
+            @RequestHeader("X-User-Rut") String headerRut,   // Header con RUT autenticado
+            @RequestHeader("X-User-Rol") String headerRol,  // Header con rol autenticado
             @RequestBody @Valid Compra compra) {
-        RequestUser user = Authorization.fromHeaders(headerRut, headerRol);
-        Authorization.requireCliente(user);
+        RequestUser user = Authorization.fromHeaders(headerRut, headerRol); // Valida headers
+        Authorization.requireCliente(user); // Solo CLIENTE
         if (!user.getRut().equalsIgnoreCase(compra.getRutUsuario())) {
             throw new org.springframework.web.server.ResponseStatusException(
                     org.springframework.http.HttpStatus.FORBIDDEN,

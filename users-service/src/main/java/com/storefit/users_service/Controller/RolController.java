@@ -33,10 +33,10 @@ public class RolController {
             content = @Content(schema = @Schema(implementation = Rol.class)))
     })
     public List<Rol> all(
-            @RequestHeader("X-User-Rut") String headerRut,
-            @RequestHeader("X-User-Rol") String headerRol) {
-        RequestUser user = Authorization.fromHeaders(headerRut, headerRol);
-        Authorization.requireAdmin(user);
+            @RequestHeader("X-User-Rut") String headerRut,   // Header con RUT autenticado
+            @RequestHeader("X-User-Rol") String headerRol) { // Header con rol autenticado
+        RequestUser user = Authorization.fromHeaders(headerRut, headerRol); // Valida headers
+        Authorization.requireAdmin(user); // Solo ADMIN
         return service.findAll();
     }
 
@@ -48,10 +48,10 @@ public class RolController {
         @ApiResponse(responseCode = "404", description = "No encontrado")
     })
     public Rol byId(@PathVariable Long id,
-                    @RequestHeader("X-User-Rut") String headerRut,
-                    @RequestHeader("X-User-Rol") String headerRol) {
-        RequestUser user = Authorization.fromHeaders(headerRut, headerRol);
-        Authorization.requireAdmin(user);
+                    @RequestHeader("X-User-Rut") String headerRut,   // Header con RUT autenticado
+                    @RequestHeader("X-User-Rol") String headerRol) { // Header con rol autenticado
+        RequestUser user = Authorization.fromHeaders(headerRut, headerRol); // Valida headers
+        Authorization.requireAdmin(user); // Solo ADMIN
         return service.findById(id);
     }
 }

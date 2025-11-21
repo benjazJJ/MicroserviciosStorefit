@@ -39,10 +39,10 @@ public class CategoriaController {
     })
     @GetMapping
     public ResponseEntity<List<Categoria>> all(
-            @RequestHeader("X-User-Rut") String headerRut,
-            @RequestHeader("X-User-Rol") String headerRol) {
-        RequestUser user = Authorization.fromHeaders(headerRut, headerRol);
-        Authorization.requireAdmin(user);
+            @RequestHeader("X-User-Rut") String headerRut,   // Header con RUT autenticado
+            @RequestHeader("X-User-Rol") String headerRol) { // Header con rol autenticado
+        RequestUser user = Authorization.fromHeaders(headerRut, headerRol); // Valida headers (401 si faltan)
+        Authorization.requireAdmin(user); // Solo ADMIN puede acceder
         return ResponseEntity.ok(service.findAll());
     }
 
@@ -54,10 +54,10 @@ public class CategoriaController {
     })
     @GetMapping("/{id}")
     public ResponseEntity<Categoria> byId(@PathVariable Long id,
-            @RequestHeader("X-User-Rut") String headerRut,
-            @RequestHeader("X-User-Rol") String headerRol) {
-        RequestUser user = Authorization.fromHeaders(headerRut, headerRol);
-        Authorization.requireAdmin(user);
+            @RequestHeader("X-User-Rut") String headerRut,   // Header con RUT autenticado
+            @RequestHeader("X-User-Rol") String headerRol) { // Header con rol autenticado
+        RequestUser user = Authorization.fromHeaders(headerRut, headerRol); // Valida headers
+        Authorization.requireAdmin(user); // Solo ADMIN
         return ResponseEntity.ok(service.findById(id));
     }
 
@@ -69,11 +69,11 @@ public class CategoriaController {
     })
     @PostMapping
     public ResponseEntity<Map<String, Object>> create(
-            @RequestHeader("X-User-Rut") String headerRut,
-            @RequestHeader("X-User-Rol") String headerRol,
+            @RequestHeader("X-User-Rut") String headerRut,   // Header con RUT autenticado
+            @RequestHeader("X-User-Rol") String headerRol,  // Header con rol autenticado
             @Valid @RequestBody Categoria c) {
-        RequestUser user = Authorization.fromHeaders(headerRut, headerRol);
-        Authorization.requireAdmin(user);
+        RequestUser user = Authorization.fromHeaders(headerRut, headerRol); // Valida headers
+        Authorization.requireAdmin(user); // Solo ADMIN
         var created = service.create(c);
         var location = URI.create("/api/v1/categorias/" + created.getIdCategoria());
         return ResponseEntity.created(location).body(
@@ -93,11 +93,11 @@ public class CategoriaController {
     @PutMapping("/{id}")
     public ResponseEntity<Map<String, Object>> update(
             @PathVariable Long id,
-            @RequestHeader("X-User-Rut") String headerRut,
-            @RequestHeader("X-User-Rol") String headerRol,
+            @RequestHeader("X-User-Rut") String headerRut,   // Header con RUT autenticado
+            @RequestHeader("X-User-Rol") String headerRol,  // Header con rol autenticado
             @Valid @RequestBody Categoria c) {
-        RequestUser user = Authorization.fromHeaders(headerRut, headerRol);
-        Authorization.requireAdmin(user);
+        RequestUser user = Authorization.fromHeaders(headerRut, headerRol); // Valida headers
+        Authorization.requireAdmin(user); // Solo ADMIN
         var updated = service.update(id, c);
         return ResponseEntity.ok(
             Map.of(
@@ -115,10 +115,10 @@ public class CategoriaController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Map<String, String>> delete(
             @PathVariable Long id,
-            @RequestHeader("X-User-Rut") String headerRut,
-            @RequestHeader("X-User-Rol") String headerRol) {
-        RequestUser user = Authorization.fromHeaders(headerRut, headerRol);
-        Authorization.requireAdmin(user);
+            @RequestHeader("X-User-Rut") String headerRut,   // Header con RUT autenticado
+            @RequestHeader("X-User-Rol") String headerRol) { // Header con rol autenticado
+        RequestUser user = Authorization.fromHeaders(headerRut, headerRol); // Valida headers
+        Authorization.requireAdmin(user); // Solo ADMIN
         service.delete(id);
         return ResponseEntity.ok(
             Map.of("message", "Categoría eliminada correctamente")

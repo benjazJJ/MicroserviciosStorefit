@@ -48,9 +48,9 @@ public class ProductoController {
     })
     @GetMapping
     public ResponseEntity<List<Producto>> all(
-            @RequestHeader("X-User-Rut") String headerRut,
-            @RequestHeader("X-User-Rol") String headerRol) {
-        Authorization.fromHeaders(headerRut, headerRol);
+            @RequestHeader("X-User-Rut") String headerRut,   // Header con RUT autenticado
+            @RequestHeader("X-User-Rol") String headerRol) { // Header con rol autenticado
+        Authorization.fromHeaders(headerRut, headerRol); // Requiere usuario autenticado (cualquier rol)
         return ResponseEntity.ok(service.findAll());
     }
 
@@ -63,9 +63,9 @@ public class ProductoController {
     public ResponseEntity<Producto> byId(
             @PathVariable Long categoriaId,
             @PathVariable Long productoId,
-            @RequestHeader("X-User-Rut") String headerRut,
-            @RequestHeader("X-User-Rol") String headerRol) {
-        Authorization.fromHeaders(headerRut, headerRol);
+            @RequestHeader("X-User-Rut") String headerRut,   // Header con RUT autenticado
+            @RequestHeader("X-User-Rol") String headerRol) { // Header con rol autenticado
+        Authorization.fromHeaders(headerRut, headerRol); // Requiere usuario autenticado (cualquier rol)
         return ResponseEntity.ok(service.findByIds(categoriaId, productoId));
     }
 
@@ -76,9 +76,9 @@ public class ProductoController {
     @GetMapping("/categoria/{categoriaId}")
     public ResponseEntity<List<Producto>> byCategoria(
             @PathVariable Long categoriaId,
-            @RequestHeader("X-User-Rut") String headerRut,
-            @RequestHeader("X-User-Rol") String headerRol) {
-        Authorization.fromHeaders(headerRut, headerRol);
+            @RequestHeader("X-User-Rut") String headerRut,   // Header con RUT autenticado
+            @RequestHeader("X-User-Rol") String headerRol) { // Header con rol autenticado
+        Authorization.fromHeaders(headerRut, headerRol); // Requiere usuario autenticado (cualquier rol)
         return ResponseEntity.ok(service.findByCategoria(categoriaId));
     }
 
@@ -91,11 +91,11 @@ public class ProductoController {
     })
     @PostMapping
     public ResponseEntity<Map<String, Object>> create(
-            @RequestHeader("X-User-Rut") String headerRut,
-            @RequestHeader("X-User-Rol") String headerRol,
+            @RequestHeader("X-User-Rut") String headerRut,   // Header con RUT autenticado
+            @RequestHeader("X-User-Rol") String headerRol,  // Header con rol autenticado
             @Valid @RequestBody Producto p) {
-        RequestUser user = Authorization.fromHeaders(headerRut, headerRol);
-        Authorization.requireAdmin(user);
+        RequestUser user = Authorization.fromHeaders(headerRut, headerRol); // Valida headers
+        Authorization.requireAdmin(user); // Solo ADMIN
         var created = service.create(p);
         ProductoId id = created.getId();
         var location = URI.create("/api/v1/productos/" + id.getIdCategoria() + "/" + id.getIdProducto());
@@ -115,11 +115,11 @@ public class ProductoController {
     public ResponseEntity<Map<String, Object>> update(
             @PathVariable Long categoriaId,
             @PathVariable Long productoId,
-            @RequestHeader("X-User-Rut") String headerRut,
-            @RequestHeader("X-User-Rol") String headerRol,
+            @RequestHeader("X-User-Rut") String headerRut,   // Header con RUT autenticado
+            @RequestHeader("X-User-Rol") String headerRol,  // Header con rol autenticado
             @Valid @RequestBody Producto p) {
-        RequestUser user = Authorization.fromHeaders(headerRut, headerRol);
-        Authorization.requireAdmin(user);
+        RequestUser user = Authorization.fromHeaders(headerRut, headerRol); // Valida headers
+        Authorization.requireAdmin(user); // Solo ADMIN
 
         var updated = service.update(categoriaId, productoId, p);
         return ResponseEntity.ok(
@@ -137,10 +137,10 @@ public class ProductoController {
     public ResponseEntity<Map<String, String>> delete(
             @PathVariable Long categoriaId,
             @PathVariable Long productoId,
-            @RequestHeader("X-User-Rut") String headerRut,
-            @RequestHeader("X-User-Rol") String headerRol) {
-        RequestUser user = Authorization.fromHeaders(headerRut, headerRol);
-        Authorization.requireAdmin(user);
+            @RequestHeader("X-User-Rut") String headerRut,   // Header con RUT autenticado
+            @RequestHeader("X-User-Rol") String headerRol) { // Header con rol autenticado
+        RequestUser user = Authorization.fromHeaders(headerRut, headerRol); // Valida headers
+        Authorization.requireAdmin(user); // Solo ADMIN
         service.delete(categoriaId, productoId);
         return ResponseEntity.ok(
                 Map.of("message", "Producto eliminado correctamente"));
