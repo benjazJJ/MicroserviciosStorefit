@@ -13,6 +13,10 @@ public final class Authorization {
         if (rut == null || rut.isBlank() || rol == null || rol.isBlank()) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Faltan headers de autenticación");
         }
+        // Enforce dotted RUT format for this service
+        if (!RutUtils.isDottedFormat(rut)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "RUT debe venir con puntos y guion (ej: 12.345.678-9)");
+        }
         return new RequestUser(rut, rol);
     }
 

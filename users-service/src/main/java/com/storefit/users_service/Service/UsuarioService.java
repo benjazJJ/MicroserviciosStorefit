@@ -13,6 +13,7 @@ import com.storefit.users_service.Model.Usuario;
 import com.storefit.users_service.Repository.UsuarioRepository;
 import com.storefit.users_service.Repository.RegistroRepository;
 import com.storefit.users_service.Repository.RolRepository;
+import com.storefit.users_service.security.RutUtils;
 
 @Service
 @RequiredArgsConstructor
@@ -25,7 +26,16 @@ public class UsuarioService {
     public List<Usuario> findAll() { return repo.findAll(); }
 
     public Usuario findByRut(String rut) {
-        return repo.findById(rut).orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado: " + rut));
+        // Attempt direct match first
+        var opt = repo.findById(rut);
+        if (opt.isPresent()) return opt.get();
+        // Fallback: if dotted, also try without dots
+        if (RutUtils.isDottedFormat(rut)) {
+            String withoutDots = RutUtils.removeDots(rut);
+            var opt2 = repo.findById(withoutDots);
+            if (opt2.isPresent()) return opt2.get();
+        }
+        throw new EntityNotFoundException("Usuario no encontrado: " + rut);
     }
 
     public Usuario findByCorreo(String correo) {
@@ -51,6 +61,10 @@ public class UsuarioService {
 
     @Transactional
     public Usuario create(Usuario u) {
+        // Enforce dotted format and persist canonical
+        String canonicalRut = RutUtils.requireDottedOrBadRequest(u.getRut());
+        u.setRut(canonicalRut);
+
         if (repo.existsById(u.getRut()))
             throw new IllegalArgumentException("Ya existe un usuario con rut " + u.getRut());
         if (u.getCorreo() != null && repo.existsByCorreoIgnoreCase(u.getCorreo()))
@@ -86,7 +100,8 @@ public class UsuarioService {
 
     @Transactional
     public void updateRol(String rut, Long rolId) {
-        var reg = registroRepo.findByRut(rut)
+        String canonicalRut = RutUtils.requireDottedOrBadRequest(rut);
+        var reg = registroRepo.findByRut(canonicalRut)
                 .orElseThrow(() -> new EntityNotFoundException("Registro no encontrado para rut: " + rut));
         reg.setRolId(rolId);
         // Actualiza el nombre del rol para consistencia

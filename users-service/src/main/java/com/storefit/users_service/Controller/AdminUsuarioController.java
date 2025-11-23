@@ -7,6 +7,7 @@ import com.storefit.users_service.Service.RegistroService;
 import com.storefit.users_service.Service.UsuarioService;
 import com.storefit.users_service.security.Authorization;
 import com.storefit.users_service.security.RequestUser;
+import com.storefit.users_service.security.RutUtils;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -69,6 +70,7 @@ public class AdminUsuarioController {
                                     @RequestHeader("X-User-Rut") String headerRut,
                                     @RequestHeader("X-User-Rol") String headerRol) {
         requireAdmin(headerRut, headerRol);
+        RutUtils.requireDottedOrBadRequest(rut);
         Usuario u = usuarioService.findByRut(rut);
         Registro r = registroRepository.findByRut(rut).orElse(null);
         return toDto(u, r);
@@ -88,8 +90,10 @@ public class AdminUsuarioController {
             @Valid @RequestBody AdminCrearUsuarioRequest req) {
         requireAdmin(headerRut, headerRol);
 
+        String rut = RutUtils.requireDottedOrBadRequest(req.getRut());
+
         Usuario u = new Usuario();
-        u.setRut(req.getRut());
+        u.setRut(rut);
         u.setNombre(req.getNombre());
         u.setApellidos(req.getApellidos());
         u.setCorreo(req.getCorreo());
@@ -100,7 +104,7 @@ public class AdminUsuarioController {
         u = usuarioService.create(u);
 
         Registro r = new Registro();
-        r.setRut(req.getRut());
+        r.setRut(rut);
         r.setUsuario(req.getCorreo());
         r.setContrasenia(req.getContrasenia());
         r.setAddress(req.getDireccion());
@@ -123,6 +127,7 @@ public class AdminUsuarioController {
                                        @RequestHeader("X-User-Rol") String headerRol,
                                        @Valid @RequestBody AdminActualizarUsuarioRequest req) {
         requireAdmin(headerRut, headerRol);
+        RutUtils.requireDottedOrBadRequest(rut);
 
         // Obtener correo previo para decidir sync
         Usuario before = usuarioService.findByRut(rut);
@@ -212,4 +217,3 @@ public class AdminUsuarioController {
         private String fotoUri;
     }
 }
-

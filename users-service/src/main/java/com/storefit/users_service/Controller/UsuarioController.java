@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 
 import com.storefit.users_service.security.Authorization;
 import com.storefit.users_service.security.RequestUser;
+import com.storefit.users_service.security.RutUtils;
 
 import java.util.List;
 import jakarta.validation.constraints.NotBlank;
@@ -53,6 +54,7 @@ public class UsuarioController {
                          @RequestHeader("X-User-Rut") String headerRut,   // Header con RUT autenticado
                          @RequestHeader("X-User-Rol") String headerRol) { // Header con rol autenticado
         RequestUser user = Authorization.fromHeaders(headerRut, headerRol); // Valida headers
+        RutUtils.requireDottedOrBadRequest(rut);
         Authorization.requireOwnerOrAdmin(user, rut); // Dueño o ADMIN
         return service.findByRut(rut);
     }
@@ -117,6 +119,7 @@ public class UsuarioController {
                                 @RequestHeader("X-User-Rol") String headerRol,
                                 @Valid @RequestBody UpdatePerfilRequest req) {
         RequestUser user = Authorization.fromHeaders(headerRut, headerRol);
+        RutUtils.requireDottedOrBadRequest(rut);
         Authorization.requireOwnerOrAdmin(user, rut);
 
         Usuario in = new Usuario();
@@ -144,6 +147,7 @@ public class UsuarioController {
                               @RequestHeader("X-User-Rol") String headerRol,
                               @Valid @RequestBody UpdateFotoRequest req) {
         RequestUser user = Authorization.fromHeaders(headerRut, headerRol);
+        RutUtils.requireDottedOrBadRequest(rut);
         Authorization.requireOwnerOrAdmin(user, rut);
         return service.updateFoto(rut, req.getFotoUri());
     }
@@ -152,6 +156,7 @@ public class UsuarioController {
     @GetMapping("/check/rut/{rut}")
     @Operation(summary = "Chequear disponibilidad de RUT para registro")
     public CheckResponse checkRut(@PathVariable String rut) {
+        RutUtils.requireDottedOrBadRequest(rut);
         boolean available = !service.existsByRut(rut);
         return new CheckResponse(available);
     }
@@ -178,6 +183,7 @@ public class UsuarioController {
                                                @RequestHeader("X-User-Rut") String headerRut,
                                                @RequestHeader("X-User-Rol") String headerRol) {
         RequestUser user = Authorization.fromHeaders(headerRut, headerRol);
+        RutUtils.requireDottedOrBadRequest(rut);
         Authorization.requireOwnerOrAdmin(user, rut);
         var other = service.findByCorreoOptional(correo);
         boolean available = other.isEmpty() || other.get().getRut().equalsIgnoreCase(rut);
@@ -191,6 +197,7 @@ public class UsuarioController {
                                                  @RequestHeader("X-User-Rut") String headerRut,
                                                  @RequestHeader("X-User-Rol") String headerRol) {
         RequestUser user = Authorization.fromHeaders(headerRut, headerRol);
+        RutUtils.requireDottedOrBadRequest(rut);
         Authorization.requireOwnerOrAdmin(user, rut);
         boolean available = service.isTelefonoDisponibleParaActualizar(rut, telefono);
         return new CheckResponse(available);

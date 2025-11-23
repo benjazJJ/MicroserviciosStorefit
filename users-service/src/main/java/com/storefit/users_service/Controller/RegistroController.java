@@ -94,6 +94,8 @@ public class RegistroController {
 
         // Crear perfil de usuario
         Usuario u = new Usuario();
+        // Enforce and persist dotted RUT
+        com.storefit.users_service.security.RutUtils.requireDottedOrBadRequest(req.getRut());
         u.setRut(req.getRut());
         u.setNombre(req.getNombre());
         u.setApellidos(req.getApellidos());
