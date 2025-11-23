@@ -33,6 +33,22 @@ public class UsuarioService {
                 .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado por correo: " + correo));
     }
 
+    public java.util.Optional<Usuario> findByCorreoOptional(String correo) {
+        return repo.findByCorreoIgnoreCase(correo);
+    }
+
+    public boolean existsByRut(String rut) { return repo.existsById(rut); }
+
+    public boolean existsByTelefono(String telefono) {
+        return telefono != null && !telefono.isBlank() && repo.existsByTelefono(telefono);
+    }
+
+    public boolean isTelefonoDisponibleParaActualizar(String rut, String telefono) {
+        if (telefono == null || telefono.isBlank()) return true;
+        var other = repo.findByTelefono(telefono);
+        return other.isEmpty() || other.get().getRut().equalsIgnoreCase(rut);
+    }
+
     @Transactional
     public Usuario create(Usuario u) {
         if (repo.existsById(u.getRut()))
@@ -77,5 +93,12 @@ public class UsuarioService {
         var rol = rolRepo.findById(rolId).orElseThrow(() -> new EntityNotFoundException("Rol no encontrado: " + rolId));
         reg.setRolNombre(rol.getNombreRol());
         registroRepo.save(reg);
+    }
+
+    @Transactional
+    public Usuario updateFoto(String rut, String fotoUri) {
+        Usuario db = findByRut(rut);
+        db.setFotoUri(fotoUri);
+        return repo.save(db);
     }
 }

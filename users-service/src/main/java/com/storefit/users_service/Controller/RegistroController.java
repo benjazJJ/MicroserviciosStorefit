@@ -59,6 +59,24 @@ public class RegistroController {
         return new LoginResponse(true, reg.getUsuario(), u.getRut(), u.getNombre(), u.getCorreo(), reg.getRolId(), reg.getRolNombre());
     }
 
+    // Cambio de contraseña
+    @PostMapping("/cambiar-contrasenia")
+    @Operation(summary = "Cambiar contraseña", description = "Valida credenciales actuales y actualiza a una nueva contraseña")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Actualizada",
+            content = @Content(schema = @Schema(implementation = ChangePasswordResponse.class))),
+        @ApiResponse(responseCode = "400", description = "Datos inválidos"),
+        @ApiResponse(responseCode = "401", description = "Credenciales inválidas"),
+        @ApiResponse(responseCode = "404", description = "Usuario no existe")
+    })
+    public ChangePasswordResponse cambiarContrasenia(@Valid @RequestBody ChangePasswordRequest req) {
+        if (!req.getNuevaContrasenia().equals(req.getConfirmarContrasenia())) {
+            throw new IllegalArgumentException("Las contraseñas no coinciden");
+        }
+        service.cambiarContrasenia(req.getUsuarioOCorreo(), req.getContraseniaActual(), req.getNuevaContrasenia());
+        return new ChangePasswordResponse(true, "Contraseña actualizada correctamente");
+    }
+
     // Registro completo: crea Usuario (perfil) + Registro (credenciales)
     @PostMapping("/registro-completo")
     @ResponseStatus(HttpStatus.CREATED)
@@ -123,6 +141,27 @@ public class RegistroController {
             Long rolId,
             String rolNombre
     ) {}
+
+    // DTO para cambio de contraseña
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Data
+    public static class ChangePasswordRequest {
+        @NotBlank
+        @Schema(description = "Usuario o correo", example = "juan@example.com")
+        private String usuarioOCorreo;
+        @NotBlank
+        @Schema(description = "Contraseña actual", example = "ClaveSegura123")
+        private String contraseniaActual;
+        @NotBlank
+        @Schema(description = "Nueva contraseña", example = "NuevaClave123")
+        private String nuevaContrasenia;
+        @NotBlank
+        @Schema(description = "Confirmación de nueva contraseña", example = "NuevaClave123")
+        private String confirmarContrasenia;
+    }
+
+    public record ChangePasswordResponse(boolean success, String message) {}
 
     // DTO para registro completo
     @NoArgsConstructor

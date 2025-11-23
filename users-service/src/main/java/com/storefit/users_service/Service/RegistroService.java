@@ -67,4 +67,30 @@ public class RegistroService {
         }
         return reg;
     }
+
+    public void cambiarContrasenia(String usuarioOCorreo, String contraseniaActual, String nuevaContrasenia) {
+        if (usuarioOCorreo == null || usuarioOCorreo.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Debe indicar usuario o correo");
+        }
+        if (contraseniaActual == null || contraseniaActual.isBlank() || nuevaContrasenia == null || nuevaContrasenia.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Contraseñas requeridas");
+        }
+
+        var regOpt = repo.findByUsuarioIgnoreCase(usuarioOCorreo);
+        if (regOpt.isEmpty()) {
+            var userOpt = usuarioRepo.findByCorreoIgnoreCase(usuarioOCorreo);
+            if (userOpt.isPresent()) {
+                regOpt = repo.findByRut(userOpt.get().getRut());
+            }
+        }
+
+        Registro reg = regOpt.orElseThrow(() -> new EntityNotFoundException("Usuario no existe: " + usuarioOCorreo));
+
+        if (!passwordEncoder.matches(contraseniaActual, reg.getContrasenia())) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Credenciales inválidas");
+        }
+
+        reg.setContrasenia(passwordEncoder.encode(nuevaContrasenia));
+        repo.save(reg);
+    }
 }

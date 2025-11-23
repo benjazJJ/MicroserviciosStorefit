@@ -18,6 +18,7 @@ import com.storefit.users_service.security.Authorization;
 import com.storefit.users_service.security.RequestUser;
 
 import java.util.List;
+import jakarta.validation.constraints.NotBlank;
 
 @RestController
 @RequestMapping("/api/v1/usuarios")
@@ -101,4 +102,116 @@ public class UsuarioController {
         public Long getRolId() { return rolId; }
         public void setRolId(Long rolId) { this.rolId = rolId; }
     }
+
+    // Actualizar perfil (dueño o ADMIN)
+    @PutMapping("/{rut}/perfil")
+    @Operation(summary = "Actualizar perfil de usuario")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Actualizado",
+            content = @Content(schema = @Schema(implementation = Usuario.class))),
+        @ApiResponse(responseCode = "404", description = "No encontrado"),
+        @ApiResponse(responseCode = "400", description = "Datos inválidos")
+    })
+    public Usuario updatePerfil(@PathVariable String rut,
+                                @RequestHeader("X-User-Rut") String headerRut,
+                                @RequestHeader("X-User-Rol") String headerRol,
+                                @Valid @RequestBody UpdatePerfilRequest req) {
+        RequestUser user = Authorization.fromHeaders(headerRut, headerRol);
+        Authorization.requireOwnerOrAdmin(user, rut);
+
+        Usuario in = new Usuario();
+        in.setRut(rut);
+        in.setNombre(req.getNombre());
+        in.setApellidos(req.getApellidos());
+        in.setCorreo(req.getCorreo());
+        in.setTelefono(req.getTelefono());
+        in.setDireccion(req.getDireccion());
+        in.setFechaNacimiento(req.getFechaNacimiento());
+        in.setFotoUri(req.getFotoUri());
+        return service.update(rut, in);
+    }
+
+    // Actualizar solo foto (dueño o ADMIN)
+    @PatchMapping("/{rut}/foto")
+    @Operation(summary = "Actualizar solo la foto de perfil")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Actualizada",
+            content = @Content(schema = @Schema(implementation = Usuario.class))),
+        @ApiResponse(responseCode = "404", description = "No encontrado")
+    })
+    public Usuario updateFoto(@PathVariable String rut,
+                              @RequestHeader("X-User-Rut") String headerRut,
+                              @RequestHeader("X-User-Rol") String headerRol,
+                              @Valid @RequestBody UpdateFotoRequest req) {
+        RequestUser user = Authorization.fromHeaders(headerRut, headerRol);
+        Authorization.requireOwnerOrAdmin(user, rut);
+        return service.updateFoto(rut, req.getFotoUri());
+    }
+
+    // Chequeos de unicidad para REGISTRO (públicos)
+    @GetMapping("/check/rut/{rut}")
+    @Operation(summary = "Chequear disponibilidad de RUT para registro")
+    public CheckResponse checkRut(@PathVariable String rut) {
+        boolean available = !service.existsByRut(rut);
+        return new CheckResponse(available);
+    }
+
+    @GetMapping("/check/correo/{correo}")
+    @Operation(summary = "Chequear disponibilidad de correo para registro")
+    public CheckResponse checkCorreo(@PathVariable String correo) {
+        boolean available = !service.findByCorreoOptional(correo).isPresent();
+        return new CheckResponse(available);
+    }
+
+    @GetMapping("/check/telefono/{telefono}")
+    @Operation(summary = "Chequear disponibilidad de teléfono para registro")
+    public CheckResponse checkTelefono(@PathVariable String telefono) {
+        boolean available = !service.existsByTelefono(telefono);
+        return new CheckResponse(available);
+    }
+
+    // Chequeos de disponibilidad para EDITAR PERFIL (dueño o ADMIN)
+    @GetMapping("/check-actualizar/correo")
+    @Operation(summary = "Chequear correo disponible para actualizar perfil")
+    public CheckResponse checkActualizarCorreo(@RequestParam String rut,
+                                               @RequestParam String correo,
+                                               @RequestHeader("X-User-Rut") String headerRut,
+                                               @RequestHeader("X-User-Rol") String headerRol) {
+        RequestUser user = Authorization.fromHeaders(headerRut, headerRol);
+        Authorization.requireOwnerOrAdmin(user, rut);
+        var other = service.findByCorreoOptional(correo);
+        boolean available = other.isEmpty() || other.get().getRut().equalsIgnoreCase(rut);
+        return new CheckResponse(available);
+    }
+
+    @GetMapping("/check-actualizar/telefono")
+    @Operation(summary = "Chequear teléfono disponible para actualizar perfil")
+    public CheckResponse checkActualizarTelefono(@RequestParam String rut,
+                                                 @RequestParam String telefono,
+                                                 @RequestHeader("X-User-Rut") String headerRut,
+                                                 @RequestHeader("X-User-Rol") String headerRol) {
+        RequestUser user = Authorization.fromHeaders(headerRut, headerRol);
+        Authorization.requireOwnerOrAdmin(user, rut);
+        boolean available = service.isTelefonoDisponibleParaActualizar(rut, telefono);
+        return new CheckResponse(available);
+    }
+
+    // DTOs para update perfil y foto
+    @lombok.Data
+    public static class UpdatePerfilRequest {
+        @NotNull @NotBlank private String nombre;
+        @NotNull @NotBlank private String apellidos;
+        @NotNull @NotBlank @jakarta.validation.constraints.Email private String correo;
+        private String telefono;
+        private String direccion;
+        private String fechaNacimiento;
+        private String fotoUri;
+    }
+
+    @lombok.Data
+    public static class UpdateFotoRequest {
+        @NotNull @NotBlank private String fotoUri;
+    }
+
+    public record CheckResponse(boolean available) {}
 }
