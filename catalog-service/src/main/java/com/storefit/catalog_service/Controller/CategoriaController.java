@@ -2,7 +2,7 @@ package com.storefit.catalog_service.Controller;
 
 import com.storefit.catalog_service.Model.Categoria;
 import com.storefit.catalog_service.Service.CategoriaService;
- 
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -78,7 +78,7 @@ public class CategoriaController {
         var location = URI.create("/api/v1/categorias/" + created.getIdCategoria());
         return ResponseEntity.created(location).body(
             Map.of(
-                "message", "Categoría creada correctamente",
+                "message", "Categoria creada correctamente",
                 "data", created
             )
         );
@@ -100,7 +100,7 @@ public class CategoriaController {
         var updated = service.update(id, c);
         return ResponseEntity.ok(
             Map.of(
-                "message", "Categoría actualizada correctamente",
+                "message", "Categoria actualizada correctamente",
                 "data", updated
             )
         );
@@ -120,11 +120,9 @@ public class CategoriaController {
         Authorization.requireAdmin(user); // Solo ADMIN
         service.delete(id);
         return ResponseEntity.ok(
-            Map.of("message", "Categoría eliminada correctamente")
+            Map.of("message", "Categoria eliminada correctamente")
         );
     }
-<<<<<<< HEAD
-=======
 
     // Manejo de errores local al controlador
     @ExceptionHandler(EntityNotFoundException.class)
@@ -136,7 +134,7 @@ public class CategoriaController {
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, Object>> handleBadRequest(IllegalArgumentException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(Map.of("message", ex.getMessage() != null ? ex.getMessage() : "Solicitud inválida"));
+                .body(Map.of("message", ex.getMessage() != null ? ex.getMessage() : "Solicitud invalida"));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -144,9 +142,8 @@ public class CategoriaController {
         String message = ex.getBindingResult().getFieldErrors().stream()
                 .findFirst()
                 .map(err -> err.getField() + ": " + err.getDefaultMessage())
-                .orElse("Datos inválidos");
+                .orElse("Datos invalidos");
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(Map.of("message", message));
     }
->>>>>>> b4bd2653c65631191b12030ca1a67c7d63ef16c9
 }

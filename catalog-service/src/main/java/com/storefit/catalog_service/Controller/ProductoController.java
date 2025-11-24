@@ -45,12 +45,8 @@ public class ProductoController {
 
     @Operation(summary = "Listar productos", description = "Obtiene todos los productos del catalogo")
     @ApiResponses({
-<<<<<<< HEAD
         @ApiResponse(responseCode = "200", description = "OK",
             content = @Content(array = @ArraySchema(schema = @Schema(implementation = Producto.class))))
-=======
-            @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = Producto.class)))
->>>>>>> b4bd2653c65631191b12030ca1a67c7d63ef16c9
     })
     @GetMapping
     public ResponseEntity<List<Producto>> all(
@@ -75,17 +71,11 @@ public class ProductoController {
         return ResponseEntity.ok(service.findByIds(categoriaId, productoId));
     }
 
-<<<<<<< HEAD
     @Operation(summary = "Listar productos por categoria",
             description = "Devuelve los productos pertenecientes a la categoria indicada")
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "OK",
             content = @Content(array = @ArraySchema(schema = @Schema(implementation = Producto.class))))
-=======
-    @Operation(summary = "Listar productos por categoría", description = "Devuelve los productos pertenecientes a la categoría indicada")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = Producto.class)))
->>>>>>> b4bd2653c65631191b12030ca1a67c7d63ef16c9
     })
     @GetMapping("/categoria/{categoriaId}")
     public ResponseEntity<List<Producto>> byCategoria(
@@ -96,7 +86,6 @@ public class ProductoController {
         return ResponseEntity.ok(service.findByCategoria(categoriaId));
     }
 
-<<<<<<< HEAD
     @Operation(summary = "Crear producto",
             description = "Crea un nuevo producto con id compuesto (id_categoria + id_producto). Requiere que la categoria exista.")
     @ApiResponses({
@@ -104,14 +93,6 @@ public class ProductoController {
         @ApiResponse(responseCode = "400", description = "Datos invalidos"),
         @ApiResponse(responseCode = "404", description = "Categoria no encontrada"),
         @ApiResponse(responseCode = "409", description = "Producto duplicado")
-=======
-    @Operation(summary = "Crear producto", description = "Crea un nuevo producto con id compuesto (id_categoria + id_producto). Requiere que la categoría exista.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Creado", content = @Content(schema = @Schema(implementation = Producto.class))),
-            @ApiResponse(responseCode = "400", description = "Datos inválidos"),
-            @ApiResponse(responseCode = "404", description = "Categoría no encontrada"),
-            @ApiResponse(responseCode = "409", description = "Producto duplicado")
->>>>>>> b4bd2653c65631191b12030ca1a67c7d63ef16c9
     })
     @PostMapping
     public ResponseEntity<Map<String, Object>> create(
@@ -124,30 +105,18 @@ public class ProductoController {
         ProductoId id = created.getId();
         var location = URI.create("/api/v1/productos/" + id.getIdCategoria() + "/" + id.getIdProducto());
         return ResponseEntity.created(location).body(
-<<<<<<< HEAD
             Map.of(
-                "message", "Producto a��adido correctamente",
+                "message", "Producto agregado correctamente",
                 "data", created
             )
         );
-=======
-                Map.of(
-                        "message", "Producto añadido correctamente",
-                        "data", created));
->>>>>>> b4bd2653c65631191b12030ca1a67c7d63ef16c9
     }
 
     @Operation(summary = "Actualizar producto", description = "Actualiza los datos del producto identificado por id_categoria e id_producto")
     @ApiResponses({
-<<<<<<< HEAD
         @ApiResponse(responseCode = "200", description = "Actualizado"),
         @ApiResponse(responseCode = "400", description = "Datos invalidos"),
         @ApiResponse(responseCode = "404", description = "No encontrado")
-=======
-            @ApiResponse(responseCode = "200", description = "Actualizado", content = @Content(schema = @Schema(implementation = Producto.class))),
-            @ApiResponse(responseCode = "400", description = "Datos inválidos"),
-            @ApiResponse(responseCode = "404", description = "No encontrado")
->>>>>>> b4bd2653c65631191b12030ca1a67c7d63ef16c9
     })
     @PutMapping("/{categoriaId}/{productoId}")
     public ResponseEntity<Map<String, Object>> update(
@@ -186,14 +155,10 @@ public class ProductoController {
 
     // Reservar y descontar stock para una compra
 
-<<<<<<< HEAD
     @Operation(
             summary = "Reservar y descontar stock para una compra",
             description = "Verifica que haya stock suficiente para todos los productos y descuenta el stock si todo esta OK"
     )
-=======
-    @Operation(summary = "Reservar y descontar stock para una compra", description = "Verifica que haya stock suficiente para todos los productos y descuenta el stock si todo está OK")
->>>>>>> b4bd2653c65631191b12030ca1a67c7d63ef16c9
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Stock reservado correctamente"),
             @ApiResponse(responseCode = "400", description = "Datos invalidos o stock insuficiente"),
@@ -218,7 +183,7 @@ public class ProductoController {
     @ExceptionHandler({ IllegalArgumentException.class, StockInsuficienteException.class })
     public ResponseEntity<Map<String, Object>> handleBadRequest(RuntimeException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(Map.of("message", ex.getMessage() != null ? ex.getMessage() : "Solicitud inválida"));
+                .body(Map.of("message", ex.getMessage() != null ? ex.getMessage() : "Solicitud invalida"));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -226,9 +191,8 @@ public class ProductoController {
         String message = ex.getBindingResult().getFieldErrors().stream()
                 .findFirst()
                 .map(err -> err.getField() + ": " + err.getDefaultMessage())
-                .orElse("Datos inválidos");
+                .orElse("Datos invalidos");
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(Map.of("message", message));
     }
 }
-
