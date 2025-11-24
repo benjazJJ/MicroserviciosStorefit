@@ -32,11 +32,10 @@ public class UsuarioController {
     @GetMapping
     @Operation(summary = "Listar usuarios")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "OK",
-            content = @Content(schema = @Schema(implementation = Usuario.class)))
+            @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = Usuario.class)))
     })
     public List<Usuario> all(
-            @RequestHeader("X-User-Rut") String headerRut,   // Header con RUT autenticado
+            @RequestHeader("X-User-Rut") String headerRut, // Header con RUT autenticado
             @RequestHeader("X-User-Rol") String headerRol) { // Header con rol autenticado
         RequestUser user = Authorization.fromHeaders(headerRut, headerRol); // Valida headers
         Authorization.requireAdmin(user); // Solo ADMIN
@@ -46,13 +45,12 @@ public class UsuarioController {
     @GetMapping("/{rut}")
     @Operation(summary = "Obtener usuario por RUT")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Encontrado",
-            content = @Content(schema = @Schema(implementation = Usuario.class))),
-        @ApiResponse(responseCode = "404", description = "No encontrado")
+            @ApiResponse(responseCode = "200", description = "Encontrado", content = @Content(schema = @Schema(implementation = Usuario.class))),
+            @ApiResponse(responseCode = "404", description = "No encontrado")
     })
     public Usuario byRut(@PathVariable String rut,
-                         @RequestHeader("X-User-Rut") String headerRut,   // Header con RUT autenticado
-                         @RequestHeader("X-User-Rol") String headerRol) { // Header con rol autenticado
+            @RequestHeader("X-User-Rut") String headerRut, // Header con RUT autenticado
+            @RequestHeader("X-User-Rol") String headerRol) { // Header con rol autenticado
         RequestUser user = Authorization.fromHeaders(headerRut, headerRol); // Valida headers
         RutUtils.requireDottedOrBadRequest(rut);
         Authorization.requireOwnerOrAdmin(user, rut); // Dueño o ADMIN
@@ -62,13 +60,12 @@ public class UsuarioController {
     @GetMapping("/correo/{correo}")
     @Operation(summary = "Obtener usuario por correo")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Encontrado",
-            content = @Content(schema = @Schema(implementation = Usuario.class))),
-        @ApiResponse(responseCode = "404", description = "No encontrado")
+            @ApiResponse(responseCode = "200", description = "Encontrado", content = @Content(schema = @Schema(implementation = Usuario.class))),
+            @ApiResponse(responseCode = "404", description = "No encontrado")
     })
     public Usuario byCorreo(@PathVariable String correo,
-                            @RequestHeader("X-User-Rut") String headerRut,   // Header con RUT autenticado
-                            @RequestHeader("X-User-Rol") String headerRol) { // Header con rol autenticado
+            @RequestHeader("X-User-Rut") String headerRut, // Header con RUT autenticado
+            @RequestHeader("X-User-Rol") String headerRol) { // Header con rol autenticado
         Usuario u = service.findByCorreo(correo);
         RequestUser user = Authorization.fromHeaders(headerRut, headerRol); // Valida headers
         if (!(user.isAdmin() || (u.getRut() != null && u.getRut().equalsIgnoreCase(user.getRut())))) {
@@ -83,15 +80,14 @@ public class UsuarioController {
     @PutMapping("/{rut}")
     @Operation(summary = "Actualizar rol por RUT")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Actualizado",
-            content = @Content(schema = @Schema(implementation = Usuario.class))),
-        @ApiResponse(responseCode = "404", description = "No encontrado"),
-        @ApiResponse(responseCode = "400", description = "Datos inválidos")
+            @ApiResponse(responseCode = "200", description = "Actualizado", content = @Content(schema = @Schema(implementation = Usuario.class))),
+            @ApiResponse(responseCode = "404", description = "No encontrado"),
+            @ApiResponse(responseCode = "400", description = "Datos inválidos")
     })
     public Usuario updateRol(@PathVariable String rut,
-                             @RequestHeader("X-User-Rut") String headerRut,   // Header con RUT autenticado
-                             @RequestHeader("X-User-Rol") String headerRol,  // Header con rol autenticado
-                             @Valid @RequestBody UpdateRolRequest req) {
+            @RequestHeader("X-User-Rut") String headerRut, // Header con RUT autenticado
+            @RequestHeader("X-User-Rol") String headerRol, // Header con rol autenticado
+            @Valid @RequestBody UpdateRolRequest req) {
         RequestUser user = Authorization.fromHeaders(headerRut, headerRol); // Valida headers
         Authorization.requireAdmin(user); // Solo ADMIN
         service.updateRol(rut, req.getRolId());
@@ -100,24 +96,30 @@ public class UsuarioController {
 
     // DTO para actualización de rol
     public static class UpdateRolRequest {
-        @NotNull private Long rolId;
-        public Long getRolId() { return rolId; }
-        public void setRolId(Long rolId) { this.rolId = rolId; }
+        @NotNull
+        private Long rolId;
+
+        public Long getRolId() {
+            return rolId;
+        }
+
+        public void setRolId(Long rolId) {
+            this.rolId = rolId;
+        }
     }
 
     // Actualizar perfil (dueño o ADMIN)
     @PutMapping("/{rut}/perfil")
     @Operation(summary = "Actualizar perfil de usuario")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Actualizado",
-            content = @Content(schema = @Schema(implementation = Usuario.class))),
-        @ApiResponse(responseCode = "404", description = "No encontrado"),
-        @ApiResponse(responseCode = "400", description = "Datos inválidos")
+            @ApiResponse(responseCode = "200", description = "Actualizado", content = @Content(schema = @Schema(implementation = Usuario.class))),
+            @ApiResponse(responseCode = "404", description = "No encontrado"),
+            @ApiResponse(responseCode = "400", description = "Datos inválidos")
     })
     public Usuario updatePerfil(@PathVariable String rut,
-                                @RequestHeader("X-User-Rut") String headerRut,
-                                @RequestHeader("X-User-Rol") String headerRol,
-                                @Valid @RequestBody UpdatePerfilRequest req) {
+            @RequestHeader("X-User-Rut") String headerRut,
+            @RequestHeader("X-User-Rol") String headerRol,
+            @Valid @RequestBody UpdatePerfilRequest req) {
         RequestUser user = Authorization.fromHeaders(headerRut, headerRol);
         RutUtils.requireDottedOrBadRequest(rut);
         Authorization.requireOwnerOrAdmin(user, rut);
@@ -138,14 +140,13 @@ public class UsuarioController {
     @PatchMapping("/{rut}/foto")
     @Operation(summary = "Actualizar solo la foto de perfil")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Actualizada",
-            content = @Content(schema = @Schema(implementation = Usuario.class))),
-        @ApiResponse(responseCode = "404", description = "No encontrado")
+            @ApiResponse(responseCode = "200", description = "Actualizada", content = @Content(schema = @Schema(implementation = Usuario.class))),
+            @ApiResponse(responseCode = "404", description = "No encontrado")
     })
     public Usuario updateFoto(@PathVariable String rut,
-                              @RequestHeader("X-User-Rut") String headerRut,
-                              @RequestHeader("X-User-Rol") String headerRol,
-                              @Valid @RequestBody UpdateFotoRequest req) {
+            @RequestHeader("X-User-Rut") String headerRut,
+            @RequestHeader("X-User-Rol") String headerRol,
+            @Valid @RequestBody UpdateFotoRequest req) {
         RequestUser user = Authorization.fromHeaders(headerRut, headerRol);
         RutUtils.requireDottedOrBadRequest(rut);
         Authorization.requireOwnerOrAdmin(user, rut);
@@ -179,9 +180,9 @@ public class UsuarioController {
     @GetMapping("/check-actualizar/correo")
     @Operation(summary = "Chequear correo disponible para actualizar perfil")
     public CheckResponse checkActualizarCorreo(@RequestParam String rut,
-                                               @RequestParam String correo,
-                                               @RequestHeader("X-User-Rut") String headerRut,
-                                               @RequestHeader("X-User-Rol") String headerRol) {
+            @RequestParam String correo,
+            @RequestHeader("X-User-Rut") String headerRut,
+            @RequestHeader("X-User-Rol") String headerRol) {
         RequestUser user = Authorization.fromHeaders(headerRut, headerRol);
         RutUtils.requireDottedOrBadRequest(rut);
         Authorization.requireOwnerOrAdmin(user, rut);
@@ -193,9 +194,9 @@ public class UsuarioController {
     @GetMapping("/check-actualizar/telefono")
     @Operation(summary = "Chequear teléfono disponible para actualizar perfil")
     public CheckResponse checkActualizarTelefono(@RequestParam String rut,
-                                                 @RequestParam String telefono,
-                                                 @RequestHeader("X-User-Rut") String headerRut,
-                                                 @RequestHeader("X-User-Rol") String headerRol) {
+            @RequestParam String telefono,
+            @RequestHeader("X-User-Rut") String headerRut,
+            @RequestHeader("X-User-Rol") String headerRol) {
         RequestUser user = Authorization.fromHeaders(headerRut, headerRol);
         RutUtils.requireDottedOrBadRequest(rut);
         Authorization.requireOwnerOrAdmin(user, rut);
@@ -206,9 +207,16 @@ public class UsuarioController {
     // DTOs para update perfil y foto
     @lombok.Data
     public static class UpdatePerfilRequest {
-        @NotNull @NotBlank private String nombre;
-        @NotNull @NotBlank private String apellidos;
-        @NotNull @NotBlank @jakarta.validation.constraints.Email private String correo;
+        @NotNull
+        @NotBlank
+        private String nombre;
+        @NotNull
+        @NotBlank
+        private String apellidos;
+        @NotNull
+        @NotBlank
+        @jakarta.validation.constraints.Email
+        private String correo;
         private String telefono;
         private String direccion;
         private String fechaNacimiento;
@@ -217,8 +225,11 @@ public class UsuarioController {
 
     @lombok.Data
     public static class UpdateFotoRequest {
-        @NotNull @NotBlank private String fotoUri;
+        @NotNull
+        @NotBlank
+        private String fotoUri;
     }
 
-    public record CheckResponse(boolean available) {}
+    public record CheckResponse(boolean available) {
+    }
 }
