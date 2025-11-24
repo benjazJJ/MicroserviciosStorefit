@@ -28,6 +28,7 @@ import org.springframework.web.server.ResponseStatusException;
 import com.storefit.support_service.Model.Mensaje;
 import com.storefit.support_service.Model.MensajeConRespuestaDTO;
 import com.storefit.support_service.Repository.MensajeRepository;
+import com.storefit.support_service.Client.UsersClient;
 
 @ExtendWith(MockitoExtension.class)
 public class MensajeServiceTest {
@@ -37,28 +38,30 @@ public class MensajeServiceTest {
 
     @InjectMocks
     private MensajeService service;
+    @Mock
+    private UsersClient usersClient;
 
     // ---------- helpers ----------
 
     private Mensaje crearMensajeBase(
             Long id,
-            Long senderUserId,
-            Integer targetRoleId,
-            Long targetUserId,
-            String content,
-            boolean isResponse) {
+            String rutRemitente,
+            Integer idRolDestino,
+            String rutDestino,
+            String contenido,
+            boolean esRespuesta) {
         Mensaje m = Mensaje.builder()
                 .id(id)
-                .senderUserId(senderUserId)
-                .targetRoleId(targetRoleId)
-                .targetUserId(targetUserId)
-                .content(content)
-                .createdAt(1763074750001L)
-                .read(false)
-                .isResponse(isResponse)
-                .repliedToId(isResponse ? 1L : null)
-                .threadId(1L)
-                .respondedAt(null)
+                .rutRemitente(rutRemitente)
+                .idRolDestino(idRolDestino)
+                .rutDestino(rutDestino)
+                .contenido(contenido)
+                .creadoEn(1763074750001L)
+                .leido(false)
+                .esRespuesta(esRespuesta)
+                .respondeAId(esRespuesta ? 1L : null)
+                .idHilo(1L)
+                .respondidoEn(null)
                 .build();
         return m;
     }
@@ -67,8 +70,8 @@ public class MensajeServiceTest {
 
     @Test
     void listarTodos_deberiaRetornarListaMensajes() {
-        Mensaje m1 = crearMensajeBase(1L, 1L, 3, null, "Hola soporte", false);
-        Mensaje m2 = crearMensajeBase(2L, 2L, 3, null, "Otro mensaje", false);
+        Mensaje m1 = crearMensajeBase(1L, "11111111-1", 3, null, "Hola soporte", false);
+        Mensaje m2 = crearMensajeBase(2L, "22222222-2", 3, null, "Otro mensaje", false);
 
         when(repo.findAll()).thenReturn(List.of(m1, m2));
 
@@ -76,7 +79,7 @@ public class MensajeServiceTest {
 
         assertEquals(2, resultado.size());
         assertEquals(1L, resultado.get(0).getId());
-        assertEquals("Hola soporte", resultado.get(0).getContent());
+        assertEquals("Hola soporte", resultado.get(0).getContenido());
         verify(repo, times(1)).findAll();
     }
 
@@ -84,7 +87,7 @@ public class MensajeServiceTest {
 
     @Test
     void obtenerPorId_cuandoExiste_deberiaRetornarMensaje() {
-        Mensaje m1 = crearMensajeBase(1L, 1L, 3, null, "Hola soporte", false);
+        Mensaje m1 = crearMensajeBase(1L, "11111111-1", 3, null, "Hola soporte", false);
         when(repo.findById(1L)).thenReturn(Optional.of(m1));
 
         Mensaje resultado = service.obtenerPorId(1L);
@@ -120,16 +123,19 @@ public class MensajeServiceTest {
             return m;
         });
 
-        Mensaje resultado = service.enviarMensajeCliente(10L, "  Hola, tengo un problema  ");
+        // no lanzar al validar RUT
+        doNothing().when(usersClient).validarUsuarioExistePorRut("12345678-9");
+
+        Mensaje resultado = service.enviarMensajeCliente("12345678-9", "  Hola, tengo un problema  ");
 
         assertNotNull(resultado.getId());
         assertEquals(1L, resultado.getId());
-        assertEquals(10L, resultado.getSenderUserId());
-        assertEquals(MensajeService.ROL_SOPORTE, resultado.getTargetRoleId());
-        assertEquals("Hola, tengo un problema", resultado.getContent());
-        assertFalse(resultado.getRead());
-        assertFalse(Boolean.TRUE.equals(resultado.getIsResponse())); // wrapper Boolean
-        assertEquals(resultado.getId(), resultado.getThreadId());
+        assertEquals("12345678-9", resultado.getRutRemitente());
+        assertEquals(MensajeService.ROL_SOPORTE, resultado.getIdRolDestino());
+        assertEquals("Hola, tengo un problema", resultado.getContenido());
+        assertFalse(resultado.getLeido());
+        assertFalse(Boolean.TRUE.equals(resultado.getEsRespuesta()));
+        assertEquals(resultado.getId(), resultado.getIdHilo());
 
         verify(repo, times(2)).save(any(Mensaje.class));
     }
@@ -140,30 +146,31 @@ public class MensajeServiceTest {
     void responderMensaje_deberiaCrearRespuestaYActualizarOriginal() {
         Mensaje original = Mensaje.builder()
                 .id(1L)
-                .senderUserId(100L) // cliente
-                .targetRoleId(MensajeService.ROL_SOPORTE)
-                .targetUserId(null)
-                .content("Hola soporte")
-                .createdAt(1763074750001L)
-                .read(false)
-                .isResponse(false)
-                .repliedToId(null)
-                .threadId(1L)
-                .respondedAt(null)
+                .rutRemitente("12345678-9") // cliente
+                .idRolDestino(MensajeService.ROL_SOPORTE)
+                .rutDestino(null)
+                .contenido("Hola soporte")
+                .creadoEn(1763074750001L)
+                .leido(false)
+                .esRespuesta(false)
+                .respondeAId(null)
+                .idHilo(1L)
+                .respondidoEn(null)
                 .build();
 
         when(repo.findById(1L)).thenReturn(Optional.of(original));
         when(repo.save(any(Mensaje.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        Mensaje respuesta = service.responderMensaje(1L, 9001L, "Respuesta soporte");
+        doNothing().when(usersClient).validarUsuarioExistePorRut("11111111-1");
+        Mensaje respuesta = service.responderMensaje(1L, "11111111-1", "Respuesta soporte");
 
         assertNotNull(respuesta);
-        assertEquals(9001L, respuesta.getSenderUserId());
-        assertEquals(100L, respuesta.getTargetUserId());
-        assertTrue(Boolean.TRUE.equals(respuesta.getIsResponse()));
-        assertEquals(1L, respuesta.getThreadId());
-        assertEquals("Respuesta soporte", respuesta.getContent());
-        assertNotNull(original.getRespondedAt());
+        assertEquals("11111111-1", respuesta.getRutRemitente());
+        assertEquals("12345678-9", respuesta.getRutDestino());
+        assertTrue(Boolean.TRUE.equals(respuesta.getEsRespuesta()));
+        assertEquals(1L, respuesta.getIdHilo());
+        assertEquals("Respuesta soporte", respuesta.getContenido());
+        assertNotNull(original.getRespondidoEn());
 
         // Se guarda el original actualizado y la respuesta
         verify(repo, times(2)).save(any(Mensaje.class));
@@ -174,15 +181,15 @@ public class MensajeServiceTest {
 
     @Test
     void marcarComoLeido_cuandoEstabaNoLeido_deberiaMarcarTrue() {
-        Mensaje noLeido = crearMensajeBase(1L, 1L, 3, null, "Hola soporte", false);
-        noLeido.setRead(false);
+        Mensaje noLeido = crearMensajeBase(1L, "11111111-1", 3, null, "Hola soporte", false);
+        noLeido.setLeido(false);
 
         when(repo.findById(1L)).thenReturn(Optional.of(noLeido));
         when(repo.save(any(Mensaje.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         Mensaje resultado = service.marcarComoLeido(1L);
 
-        assertTrue(Boolean.TRUE.equals(resultado.getRead()));
+        assertTrue(Boolean.TRUE.equals(resultado.getLeido()));
         verify(repo, times(1)).findById(1L);
         verify(repo, times(1)).save(any(Mensaje.class));
     }
@@ -217,12 +224,12 @@ public class MensajeServiceTest {
 
     @Test
     void bandejaSoporte_deberiaMapearOriginalYRespuesta() {
-        Mensaje original = crearMensajeBase(1L, 10L, MensajeService.ROL_SOPORTE, null, "Hola soporte", false);
-        Mensaje respuesta = crearMensajeBase(2L, 9001L, null, 10L, "Respuesta soporte", true);
+        Mensaje original = crearMensajeBase(1L, "12345678-9", MensajeService.ROL_SOPORTE, null, "Hola soporte", false);
+        Mensaje respuesta = crearMensajeBase(2L, "11111111-1", null, "12345678-9", "Respuesta soporte", true);
 
-        when(repo.findByTargetRoleIdAndIsResponseFalseOrderByCreatedAtAsc(MensajeService.ROL_SOPORTE))
+        when(repo.findByIdRolDestinoAndEsRespuestaFalseOrderByCreadoEnAsc(MensajeService.ROL_SOPORTE))
                 .thenReturn(List.of(original));
-        when(repo.findByRepliedToIdAndIsResponseTrueOrderByCreatedAtAsc(1L))
+        when(repo.findByRespondeAIdAndEsRespuestaTrueOrderByCreadoEnAsc(1L))
                 .thenReturn(List.of(respuesta));
 
         List<MensajeConRespuestaDTO> resultado = service.bandejaSoporte(true);
@@ -231,51 +238,51 @@ public class MensajeServiceTest {
         MensajeConRespuestaDTO dto = resultado.get(0);
         assertEquals(1L, dto.getClienteMensaje().getId());
         assertEquals(2L, dto.getRespuesta().getId());
-        assertEquals("Hola soporte", dto.getClienteMensaje().getContent());
-        assertEquals("Respuesta soporte", dto.getRespuesta().getContent());
+        assertEquals("Hola soporte", dto.getClienteMensaje().getContenido());
+        assertEquals("Respuesta soporte", dto.getRespuesta().getContenido());
 
         verify(repo, times(1))
-                .findByTargetRoleIdAndIsResponseFalseOrderByCreatedAtAsc(MensajeService.ROL_SOPORTE);
+                .findByIdRolDestinoAndEsRespuestaFalseOrderByCreadoEnAsc(MensajeService.ROL_SOPORTE);
         verify(repo, times(1))
-                .findByRepliedToIdAndIsResponseTrueOrderByCreatedAtAsc(1L);
+                .findByRespondeAIdAndEsRespuestaTrueOrderByCreadoEnAsc(1L);
     }
 
     // ---------- bandejaUsuario ----------
 
     @Test
     void bandejaUsuario_deberiaMapearOriginalYRespuesta() {
-        Long usuarioId = 10L;
+        String rut = "12345678-9";
 
-        Mensaje original = crearMensajeBase(1L, usuarioId, MensajeService.ROL_SOPORTE, null, "Hola soporte", false);
-        Mensaje respuesta = crearMensajeBase(2L, 9001L, null, usuarioId, "Respuesta soporte", true);
+        Mensaje original = crearMensajeBase(1L, rut, MensajeService.ROL_SOPORTE, null, "Hola soporte", false);
+        Mensaje respuesta = crearMensajeBase(2L, "11111111-1", null, rut, "Respuesta soporte", true);
 
-        when(repo.findBySenderUserIdAndIsResponseFalseOrderByCreatedAtDesc(usuarioId))
+        when(repo.findByRutRemitenteAndEsRespuestaFalseOrderByCreadoEnDesc(rut))
                 .thenReturn(List.of(original));
-        when(repo.findByRepliedToIdAndIsResponseTrueOrderByCreatedAtAsc(1L))
+        when(repo.findByRespondeAIdAndEsRespuestaTrueOrderByCreadoEnAsc(1L))
                 .thenReturn(List.of(respuesta));
 
-        List<MensajeConRespuestaDTO> resultado = service.bandejaUsuario(usuarioId, false);
+        List<MensajeConRespuestaDTO> resultado = service.bandejaUsuario(rut, false);
 
         assertEquals(1, resultado.size());
         MensajeConRespuestaDTO dto = resultado.get(0);
-        assertEquals(usuarioId, dto.getClienteMensaje().getSenderUserId());
-        assertEquals("Hola soporte", dto.getClienteMensaje().getContent());
-        assertEquals("Respuesta soporte", dto.getRespuesta().getContent());
+        assertEquals(rut, dto.getClienteMensaje().getRutRemitente());
+        assertEquals("Hola soporte", dto.getClienteMensaje().getContenido());
+        assertEquals("Respuesta soporte", dto.getRespuesta().getContenido());
 
         verify(repo, times(1))
-                .findBySenderUserIdAndIsResponseFalseOrderByCreatedAtDesc(usuarioId);
+                .findByRutRemitenteAndEsRespuestaFalseOrderByCreadoEnDesc(rut);
         verify(repo, times(1))
-                .findByRepliedToIdAndIsResponseTrueOrderByCreatedAtAsc(1L);
+                .findByRespondeAIdAndEsRespuestaTrueOrderByCreadoEnAsc(1L);
     }
 
     // ---------- mensajesPorThread ----------
 
     @Test
     void mensajesPorThread_deberiaRetornarListaMensajesDeHilo() {
-        Mensaje original = crearMensajeBase(1L, 10L, MensajeService.ROL_SOPORTE, null, "Hola soporte", false);
-        Mensaje respuesta = crearMensajeBase(2L, 9001L, null, 10L, "Respuesta soporte", true);
+        Mensaje original = crearMensajeBase(1L, "12345678-9", MensajeService.ROL_SOPORTE, null, "Hola soporte", false);
+        Mensaje respuesta = crearMensajeBase(2L, "11111111-1", null, "12345678-9", "Respuesta soporte", true);
 
-        when(repo.findByThreadIdOrderByCreatedAtAsc(1L))
+        when(repo.findByIdHiloOrderByCreadoEnAsc(1L))
                 .thenReturn(List.of(original, respuesta));
 
         List<Mensaje> resultado = service.mensajesPorThread(1L);
@@ -283,6 +290,6 @@ public class MensajeServiceTest {
         assertEquals(2, resultado.size());
         assertEquals(1L, resultado.get(0).getId());
         assertEquals(2L, resultado.get(1).getId());
-        verify(repo, times(1)).findByThreadIdOrderByCreatedAtAsc(1L);
+        verify(repo, times(1)).findByIdHiloOrderByCreadoEnAsc(1L);
     }
 }

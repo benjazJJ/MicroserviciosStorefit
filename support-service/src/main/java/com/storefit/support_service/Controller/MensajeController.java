@@ -12,12 +12,15 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.storefit.support_service.Model.Mensaje;
 import com.storefit.support_service.Model.MensajeConRespuestaDTO;
 import com.storefit.support_service.Service.MensajeService;
+import com.storefit.support_service.security.Authorization;
+import com.storefit.support_service.security.RequestUser;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -44,7 +47,11 @@ public class MensajeController {
         @ApiResponse(responseCode = "200", description = "OK",
             content = @Content(schema = @Schema(implementation = Mensaje.class)))
     })
-    public List<Mensaje> listar() {
+    public List<Mensaje> listar(
+            @RequestHeader("X-User-Rut") String headerRut,
+            @RequestHeader("X-User-Rol") String headerRol) {
+        RequestUser user = Authorization.fromHeaders(headerRut, headerRol);
+        Authorization.requireSupport(user);
         return service.listarTodos();
     }
 
@@ -55,8 +62,19 @@ public class MensajeController {
             content = @Content(schema = @Schema(implementation = Mensaje.class))),
         @ApiResponse(responseCode = "404", description = "No encontrado")
     })
-    public Mensaje porId(@PathVariable Long id) {
-        return service.obtenerPorId(id);
+    public Mensaje porId(@PathVariable Long id,
+                         @RequestHeader("X-User-Rut") String headerRut,
+                         @RequestHeader("X-User-Rol") String headerRol) {
+        Mensaje m = service.obtenerPorId(id);
+        RequestUser user = Authorization.fromHeaders(headerRut, headerRol);
+        boolean participante = (m.getRutRemitente() != null && m.getRutRemitente().equalsIgnoreCase(user.getRut()))
+                || (m.getRutDestino() != null && m.getRutDestino().equalsIgnoreCase(user.getRut()));
+        if (!(user.isSoporte() || participante)) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.FORBIDDEN,
+                    "No autorizado a ver este mensaje");
+        }
+        return m;
     }
 
     @DeleteMapping("/{id}")
@@ -66,7 +84,11 @@ public class MensajeController {
         @ApiResponse(responseCode = "404", description = "No encontrado")
     })
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void eliminar(@PathVariable Long id) {
+    public void eliminar(@PathVariable Long id,
+                         @RequestHeader("X-User-Rut") String headerRut,
+                         @RequestHeader("X-User-Rol") String headerRol) {
+        RequestUser user = Authorization.fromHeaders(headerRut, headerRol);
+        Authorization.requireSupport(user);
         service.eliminar(id);
     }
 
@@ -77,7 +99,18 @@ public class MensajeController {
             content = @Content(schema = @Schema(implementation = Mensaje.class))),
         @ApiResponse(responseCode = "404", description = "No encontrado")
     })
-    public Mensaje marcarLeido(@PathVariable Long id) {
+    public Mensaje marcarLeido(@PathVariable Long id,
+                               @RequestHeader("X-User-Rut") String headerRut,
+                               @RequestHeader("X-User-Rol") String headerRol) {
+        RequestUser user = Authorization.fromHeaders(headerRut, headerRol);
+        Mensaje m = service.obtenerPorId(id);
+        boolean participante = (m.getRutRemitente() != null && m.getRutRemitente().equalsIgnoreCase(user.getRut()))
+                || (m.getRutDestino() != null && m.getRutDestino().equalsIgnoreCase(user.getRut()));
+        if (!(user.isSoporte() || participante)) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.FORBIDDEN,
+                    "No autorizado a marcar este mensaje");
+        }
         return service.marcarComoLeido(id);
     }
 
@@ -91,10 +124,19 @@ public class MensajeController {
         @ApiResponse(responseCode = "400", description = "Datos inválidos")
     })
     public ResponseEntity<Mensaje> enviarMensajeCliente(
+            @RequestHeader("X-User-Rut") String headerRut,   // Header con RUT autenticado
+            @RequestHeader("X-User-Rol") String headerRol,  // Header con rol autenticado
             @RequestBody EnviarMensajeRequest request) {
+        RequestUser user = Authorization.fromHeaders(headerRut, headerRol); // Valida headers
+        Authorization.requireCliente(user); // Solo CLIENTE
+        if (request.getRutRemitente() == null || !user.getRut().equalsIgnoreCase(request.getRutRemitente())) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.FORBIDDEN,
+                    "No puedes enviar mensajes usando otro RUT");
+        }
         Mensaje creado = service.enviarMensajeCliente(
-                request.getSenderUserId(),
-                request.getContent());
+                request.getRutRemitente(),
+                request.getContenido());
         return ResponseEntity.status(HttpStatus.CREATED).body(creado);
     }
 
@@ -107,11 +149,20 @@ public class MensajeController {
     })
     public ResponseEntity<Mensaje> responderMensaje(
             @PathVariable Long originalId,
+            @RequestHeader("X-User-Rut") String headerRut,   // Header con RUT autenticado
+            @RequestHeader("X-User-Rol") String headerRol,  // Header con rol autenticado
             @RequestBody ResponderMensajeRequest request) {
+        RequestUser user = Authorization.fromHeaders(headerRut, headerRol); // Valida headers
+        Authorization.requireSupport(user); // Solo SOPORTE
+        if (request.getRutSoporte() == null || !user.getRut().equalsIgnoreCase(request.getRutSoporte())) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.FORBIDDEN,
+                    "No puedes responder como otro usuario de soporte");
+        }
         Mensaje respuesta = service.responderMensaje(
                 originalId,
-                request.getSoporteUserId(),
-                request.getContent());
+                request.getRutSoporte(),
+                request.getContenido());
         return ResponseEntity.status(HttpStatus.CREATED).body(respuesta);
     }
 
@@ -122,30 +173,55 @@ public class MensajeController {
             content = @Content(schema = @Schema(implementation = MensajeConRespuestaDTO.class)))
     })
     public List<MensajeConRespuestaDTO> bandejaSoporte(
+            @RequestHeader("X-User-Rut") String headerRut,
+            @RequestHeader("X-User-Rol") String headerRol,
             @RequestParam(defaultValue = "false") boolean asc) {
+        RequestUser user = Authorization.fromHeaders(headerRut, headerRol);
+        Authorization.requireSupport(user);
         return service.bandejaSoporte(asc);
     }
 
-    @GetMapping("/usuario/{usuarioId}/bandeja")
+    @GetMapping("/usuario/{rut}/bandeja")
     @Operation(summary = "Bandeja de un cliente")
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "OK",
             content = @Content(schema = @Schema(implementation = MensajeConRespuestaDTO.class)))
     })
     public List<MensajeConRespuestaDTO> bandejaUsuario(
-            @PathVariable Long usuarioId,
+            @PathVariable String rut,
+            @RequestHeader("X-User-Rut") String headerRut,
+            @RequestHeader("X-User-Rol") String headerRol,
             @RequestParam(defaultValue = "false") boolean asc) {
-        return service.bandejaUsuario(usuarioId, asc);
+        RequestUser user = Authorization.fromHeaders(headerRut, headerRol);
+        if (!(user.isSoporte() || user.getRut().equalsIgnoreCase(rut))) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.FORBIDDEN,
+                    "No autorizado a ver esta bandeja");
+        }
+        return service.bandejaUsuario(rut, asc);
     }
 
-    @GetMapping("/hilos/{threadId}")
+    @GetMapping("/hilos/{idHilo}")
     @Operation(summary = "Obtener un hilo completo")
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "OK",
             content = @Content(schema = @Schema(implementation = Mensaje.class)))
     })
-    public List<Mensaje> mensajesPorThread(@PathVariable Long threadId) {
-        return service.mensajesPorThread(threadId);
+    public List<Mensaje> mensajesPorThread(@PathVariable Long idHilo,
+                                           @RequestHeader("X-User-Rut") String headerRut,
+                                           @RequestHeader("X-User-Rol") String headerRol) {
+        List<Mensaje> mensajes = service.mensajesPorThread(idHilo);
+        RequestUser user = Authorization.fromHeaders(headerRut, headerRol);
+        boolean participa = mensajes.stream().anyMatch(m ->
+                (m.getRutRemitente() != null && m.getRutRemitente().equalsIgnoreCase(user.getRut())) ||
+                (m.getRutDestino() != null && m.getRutDestino().equalsIgnoreCase(user.getRut()))
+        );
+        if (!(user.isSoporte() || participa)) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.FORBIDDEN,
+                    "No autorizado a ver este hilo");
+        }
+        return mensajes;
     }
 
     // ---------- DTOs de entrada ----------
@@ -153,18 +229,18 @@ public class MensajeController {
     @Data
     @Schema(description = "Solicitud de envío de mensaje de cliente a soporte")
     public static class EnviarMensajeRequest {
-        @Schema(description = "ID del usuario que envía", example = "5001")
-        private Long senderUserId;
+        @Schema(description = "RUT del remitente", example = "12345678-9")
+        private String rutRemitente;
         @Schema(description = "Contenido", example = "Tengo un problema con mi pedido")
-        private String content;
+        private String contenido;
     }
 
     @Data
     @Schema(description = "Solicitud de respuesta de soporte a un mensaje")
     public static class ResponderMensajeRequest {
-        @Schema(description = "ID del usuario de soporte", example = "9001")
-        private Long soporteUserId;
+        @Schema(description = "RUT del usuario de soporte", example = "11111111-1")
+        private String rutSoporte;
         @Schema(description = "Contenido de la respuesta", example = "Te contactaremos a la brevedad")
-        private String content;
+        private String contenido;
     }
 }

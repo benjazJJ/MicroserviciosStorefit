@@ -24,19 +24,19 @@ public class TestAccountsInitializer {
     public void init() {
         crearCuentaSiNoExiste(
                 // usuario
-                "11111111-1", "Cliente", "Demo", "cliente@test.com", "111111111", "Calle 1", "1990-01-01",
+                "11.111.111-1", "Cliente", "Demo", "cliente@test.com", "111111111", "Calle 1", "1990-01-01",
                 "cliente", "Cliente123!", 1L
         );
 
         crearCuentaSiNoExiste(
                 // admin
-                "22222222-2", "Admin", "Demo", "admin@test.com", "222222222", "Calle 2", "1985-05-05",
+                "22.222.222-2", "Admin", "Demo", "admin@test.com", "222222222", "Calle 2", "1985-05-05",
                 "admin", "Admin123!", 2L
         );
 
         crearCuentaSiNoExiste(
                 // soporte
-                "33333333-3", "Soporte", "Demo", "soporte@test.com", "333333333", "Calle 3", "1988-08-08",
+                "33.333.333-3", "Soporte", "Demo", "soporte@test.com", "333333333", "Calle 3", "1988-08-08",
                 "soporte", "Soporte123!", 3L
         );
     }
