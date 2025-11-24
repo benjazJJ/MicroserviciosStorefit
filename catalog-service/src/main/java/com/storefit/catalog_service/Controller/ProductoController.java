@@ -22,6 +22,7 @@ import com.storefit.catalog_service.Service.StockReservaItem;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
@@ -34,10 +35,10 @@ public class ProductoController {
 
     private final ProductoService service;
 
-    @Operation(summary = "Listar productos", description = "Obtiene todos los productos del catálogo")
+    @Operation(summary = "Listar productos", description = "Obtiene todos los productos del catalogo")
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "OK",
-            content = @Content(schema = @Schema(implementation = Producto.class)))
+            content = @Content(array = @ArraySchema(schema = @Schema(implementation = Producto.class))))
     })
     @GetMapping
     public ResponseEntity<List<Producto>> all() {
@@ -56,11 +57,11 @@ public class ProductoController {
         return ResponseEntity.ok(service.findByIds(categoriaId, productoId));
     }
 
-    @Operation(summary = "Listar productos por categoría",
-            description = "Devuelve los productos pertenecientes a la categoría indicada")
+    @Operation(summary = "Listar productos por categoria",
+            description = "Devuelve los productos pertenecientes a la categoria indicada")
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "OK",
-            content = @Content(schema = @Schema(implementation = Producto.class)))
+            content = @Content(array = @ArraySchema(schema = @Schema(implementation = Producto.class))))
     })
     @GetMapping("/categoria/{categoriaId}")
     public ResponseEntity<List<Producto>> byCategoria(@PathVariable Long categoriaId) {
@@ -68,12 +69,11 @@ public class ProductoController {
     }
 
     @Operation(summary = "Crear producto",
-            description = "Crea un nuevo producto con id compuesto (id_categoria + id_producto). Requiere que la categoría exista.")
+            description = "Crea un nuevo producto con id compuesto (id_categoria + id_producto). Requiere que la categoria exista.")
     @ApiResponses({
-        @ApiResponse(responseCode = "201", description = "Creado",
-            content = @Content(schema = @Schema(implementation = Producto.class))),
-        @ApiResponse(responseCode = "400", description = "Datos inválidos"),
-        @ApiResponse(responseCode = "404", description = "Categoría no encontrada"),
+        @ApiResponse(responseCode = "201", description = "Creado"),
+        @ApiResponse(responseCode = "400", description = "Datos invalidos"),
+        @ApiResponse(responseCode = "404", description = "Categoria no encontrada"),
         @ApiResponse(responseCode = "409", description = "Producto duplicado")
     })
     @PostMapping
@@ -83,7 +83,7 @@ public class ProductoController {
         var location = URI.create("/api/v1/productos/" + id.getIdCategoria() + "/" + id.getIdProducto());
         return ResponseEntity.created(location).body(
             Map.of(
-                "message", "Producto añadido correctamente",
+                "message", "Producto a��adido correctamente",
                 "data", created
             )
         );
@@ -92,9 +92,8 @@ public class ProductoController {
     @Operation(summary = "Actualizar producto",
             description = "Actualiza los datos del producto identificado por id_categoria e id_producto")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Actualizado",
-            content = @Content(schema = @Schema(implementation = Producto.class))),
-        @ApiResponse(responseCode = "400", description = "Datos inválidos"),
+        @ApiResponse(responseCode = "200", description = "Actualizado"),
+        @ApiResponse(responseCode = "400", description = "Datos invalidos"),
         @ApiResponse(responseCode = "404", description = "No encontrado")
     })
     @PutMapping("/{categoriaId}/{productoId}")
@@ -130,12 +129,12 @@ public class ProductoController {
 
     @Operation(
             summary = "Reservar y descontar stock para una compra",
-            description = "Verifica que haya stock suficiente para todos los productos y descuenta el stock si todo está OK"
+            description = "Verifica que haya stock suficiente para todos los productos y descuenta el stock si todo esta OK"
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Stock añadido correctamente"),
-            @ApiResponse(responseCode = "400", description = "Datos inválidos o stock insuficiente"),
-            @ApiResponse(responseCode = "404", description = "Algún producto no existe")
+            @ApiResponse(responseCode = "200", description = "Stock reservado correctamente"),
+            @ApiResponse(responseCode = "400", description = "Datos invalidos o stock insuficiente"),
+            @ApiResponse(responseCode = "404", description = "Algun producto no existe")
     })
     @PostMapping("/stock/reservar")
     public ResponseEntity<Map<String, Object>> reservarStock(
@@ -149,3 +148,4 @@ public class ProductoController {
         );
     }
 }
+

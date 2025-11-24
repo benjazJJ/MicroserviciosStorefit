@@ -5,6 +5,7 @@ import com.storefit.catalog_service.Service.CategoriaService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
@@ -23,17 +24,17 @@ public class CategoriaController {
 
     private final CategoriaService service;
 
-    @Operation(summary = "Listar categorías", description = "Obtiene todas las categorías")
+    @Operation(summary = "Listar categorias", description = "Obtiene todas las categorias")
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "OK",
-            content = @Content(schema = @Schema(implementation = Categoria.class)))
+            content = @Content(array = @ArraySchema(schema = @Schema(implementation = Categoria.class))))
     })
     @GetMapping
     public ResponseEntity<List<Categoria>> all() {
         return ResponseEntity.ok(service.findAll());
     }
 
-    @Operation(summary = "Obtener categoría por ID")
+    @Operation(summary = "Obtener categoria por ID")
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "OK",
             content = @Content(schema = @Schema(implementation = Categoria.class))),
@@ -44,11 +45,10 @@ public class CategoriaController {
         return ResponseEntity.ok(service.findById(id));
     }
 
-    @Operation(summary = "Crear categoría")
+    @Operation(summary = "Crear categoria")
     @ApiResponses({
-        @ApiResponse(responseCode = "201", description = "Creada",
-            content = @Content(schema = @Schema(implementation = Categoria.class))),
-        @ApiResponse(responseCode = "400", description = "Solicitud inválida")
+        @ApiResponse(responseCode = "201", description = "Creada"),
+        @ApiResponse(responseCode = "400", description = "Solicitud invalida")
     })
     @PostMapping
     public ResponseEntity<Map<String, Object>> create(@Valid @RequestBody Categoria c) {
@@ -62,10 +62,9 @@ public class CategoriaController {
         );
     }
 
-    @Operation(summary = "Actualizar categoría")
+    @Operation(summary = "Actualizar categoria")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Actualizada",
-            content = @Content(schema = @Schema(implementation = Categoria.class))),
+        @ApiResponse(responseCode = "200", description = "Actualizada"),
         @ApiResponse(responseCode = "404", description = "No encontrada")
     })
     @PutMapping("/{id}")
@@ -79,7 +78,7 @@ public class CategoriaController {
         );
     }
 
-    @Operation(summary = "Eliminar categoría")
+    @Operation(summary = "Eliminar categoria")
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "Eliminada"),
         @ApiResponse(responseCode = "404", description = "No encontrada")
