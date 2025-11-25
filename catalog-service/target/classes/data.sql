@@ -25,7 +25,7 @@ INSERT INTO producto (id_categoria, id_producto, marca, modelo, color, talla, pr
   (1, 1008, 'StoreFit', 'XFITRX', 'Blanco','M',  9990, 80, '/img/poleras/xfitrx_blanco.png'),
   (1, 1009, 'StoreFit', 'XFITRX', 'Blanco','L',  9990, 80, '/img/poleras/xfitrx_blanco.png'),
   (1, 1010, 'StoreFit', 'XFITRX', 'Blanco','XL', 9990, 80, '/img/poleras/xfitrx_blanco.png')
-ON DUPLICATE KEY UPDATE marca=VALUES(marca), modelo=VALUES(modelo), color=VALUES(color), talla=VALUES(talla), precio=VALUES(precio), stock=VALUES(stock), image_url=VALUES(image_url);
+ON DUPLICATE KEY UPDATE marca=VALUES(marca), modelo=VALUES(modelo), color=VALUES(color), talla=VALUES(talla), precio=VALUES(precio), image_url=VALUES(image_url);
 
 -- Poleron (categoria 2) - modelo WARMGLIDE
 INSERT INTO producto (id_categoria, id_producto, marca, modelo, color, talla, precio, stock, image_url) VALUES
@@ -39,7 +39,7 @@ INSERT INTO producto (id_categoria, id_producto, marca, modelo, color, talla, pr
   (2, 2008, 'StoreFit', 'WARMGLIDE', 'Blanco','M',  17990, 80, '/img/poleron/warmglide_blanco.png'),
   (2, 2009, 'StoreFit', 'WARMGLIDE', 'Blanco','L',  17990, 80, '/img/poleron/warmglide_blanco.png'),
   (2, 2010, 'StoreFit', 'WARMGLIDE', 'Blanco','XL', 17990, 80, '/img/poleron/warmglide_blanco.png')
-ON DUPLICATE KEY UPDATE marca=VALUES(marca), modelo=VALUES(modelo), color=VALUES(color), talla=VALUES(talla), precio=VALUES(precio), stock=VALUES(stock), image_url=VALUES(image_url);
+ON DUPLICATE KEY UPDATE marca=VALUES(marca), modelo=VALUES(modelo), color=VALUES(color), talla=VALUES(talla), precio=VALUES(precio), image_url=VALUES(image_url);
 
 -- Buzo (categoria 3) - modelo FLEXRUN
 INSERT INTO producto (id_categoria, id_producto, marca, modelo, color, talla, precio, stock, image_url) VALUES
@@ -53,7 +53,7 @@ INSERT INTO producto (id_categoria, id_producto, marca, modelo, color, talla, pr
   (3, 3008, 'StoreFit', 'FLEXRUN', 'Blanco','M',  14990, 80, '/img/buzo/flexrun_blanco.png'),
   (3, 3009, 'StoreFit', 'FLEXRUN', 'Blanco','L',  14990, 80, '/img/buzo/flexrun_blanco.png'),
   (3, 3010, 'StoreFit', 'FLEXRUN', 'Blanco','XL', 14990, 80, '/img/buzo/flexrun_blanco.png')
-ON DUPLICATE KEY UPDATE marca=VALUES(marca), modelo=VALUES(modelo), color=VALUES(color), talla=VALUES(talla), precio=VALUES(precio), stock=VALUES(stock), image_url=VALUES(image_url);
+ON DUPLICATE KEY UPDATE marca=VALUES(marca), modelo=VALUES(modelo), color=VALUES(color), talla=VALUES(talla), precio=VALUES(precio), image_url=VALUES(image_url);
 
 -- Conjunto Femenino (categoria 4) - modelo FITQUEEN
 INSERT INTO producto (id_categoria, id_producto, marca, modelo, color, talla, precio, stock, image_url) VALUES
@@ -67,4 +67,10 @@ INSERT INTO producto (id_categoria, id_producto, marca, modelo, color, talla, pr
   (4, 4008, 'StoreFit', 'FITQUEEN', 'Blanco','M',  19990, 80, '/img/conjunto/fitqueen_blanco.png'),
   (4, 4009, 'StoreFit', 'FITQUEEN', 'Blanco','L',  19990, 80, '/img/conjunto/fitqueen_blanco.png'),
   (4, 4010, 'StoreFit', 'FITQUEEN', 'Blanco','XL', 19990, 80, '/img/conjunto/fitqueen_blanco.png')
-ON DUPLICATE KEY UPDATE marca=VALUES(marca), modelo=VALUES(modelo), color=VALUES(color), talla=VALUES(talla), precio=VALUES(precio), stock=VALUES(stock), image_url=VALUES(image_url);
+ON DUPLICATE KEY UPDATE marca=VALUES(marca), modelo=VALUES(modelo), color=VALUES(color), talla=VALUES(talla), precio=VALUES(precio), image_url=VALUES(image_url);
+
+-- Fallback para IDs bajos usados por la app (ej. id_producto 2 y 3)
+INSERT INTO producto (id_categoria, id_producto, marca, modelo, color, talla, precio, stock, image_url) VALUES
+  (3, 2, 'StoreFit', 'FLEXRUN', 'Negro', 'L', 14990, 80, '/img/buzo/flexrun_negro.png'),
+  (3, 3, 'StoreFit', 'FLEXRUN', 'Negro', 'XL', 14990, 80, '/img/buzo/flexrun_negro.png')
+ON DUPLICATE KEY UPDATE marca=VALUES(marca), modelo=VALUES(modelo), color=VALUES(color), talla=VALUES(talla), precio=VALUES(precio), image_url=VALUES(image_url);

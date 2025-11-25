@@ -60,12 +60,22 @@ public class CompraService {
         }
         rutUsuario = rutUsuario.trim();
         UsuarioDTO usuario = usersClient.obtenerUsuarioPorRut(rutUsuario);
-        if (usuario == null || usuario.getRut() == null || !rutUsuario.equals(usuario.getRut())) {
+        if (usuario == null || usuario.getRut() == null) {
             throw new ResponseStatusException(
                     HttpStatus.NOT_FOUND,
                     "Usuario no encontrado o RUT no coincide"
             );
         }
+        String rutNormalizadoRequest = normalizeRut(rutUsuario);
+        String rutNormalizadoRespuesta = normalizeRut(usuario.getRut());
+        if (!rutNormalizadoRequest.equalsIgnoreCase(rutNormalizadoRespuesta)) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "Usuario no encontrado o RUT no coincide"
+            );
+        }
+        // Guardamos la compra siempre con el RUT normalizado (con puntos/guion del users-service)
+        compra.setRutUsuario(usuario.getRut());
 
         // 1) Preparamos el payload para el catalog-service
         List<StockReservaItemDTO> stockItems = new ArrayList<>();
@@ -96,5 +106,13 @@ public class CompraService {
 
     public Integer totalGastado(String rut) {
         return compraRepository.totalGastadoPorRut(rut);
+    }
+
+    // Normaliza removiendo puntos y guion para comparar RUTs equivalentes
+    private String normalizeRut(String rut) {
+        if (rut == null) {
+            return "";
+        }
+        return rut.replace(".", "").replace("-", "").trim().toUpperCase();
     }
 }

@@ -13,9 +13,11 @@ import com.storefit.catalog_service.Repository.ProductoRepository;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ProductoService {
 
     private static final Set<String> TALLAS = Set.of("XS", "S", "M", "L", "XL");
@@ -39,7 +41,7 @@ public class ProductoService {
     @Transactional(readOnly = true)
     public List<Producto> findByCategoria(Long categoriaId) {
         if (!categoriaRepo.existsById(categoriaId)) {
-            throw new EntityNotFoundException("Categoría no encontrada: " + categoriaId);
+            throw new EntityNotFoundException("Categoria no encontrada: " + categoriaId);
         }
         return repo.findByIdIdCategoria(categoriaId);
     }
@@ -54,11 +56,11 @@ public class ProductoService {
 
         Long idCat = p.getId().getIdCategoria();
         if (!categoriaRepo.existsById(idCat)) {
-            throw new EntityNotFoundException("Categoría no existe: " + idCat);
+            throw new EntityNotFoundException("Categoria no existe: " + idCat);
         }
 
         if (repo.existsById(p.getId())) {
-            throw new IllegalArgumentException("El id de producto ya está en uso: "
+            throw new IllegalArgumentException("El id de producto ya esta en uso: "
                     + p.getId().getIdCategoria() + "/" + p.getId().getIdProducto());
         }
 
@@ -76,7 +78,7 @@ public class ProductoService {
             throw new IllegalArgumentException("Cuerpo de producto requerido");
         }
 
-        // No se permite cambiar el id compuesto vía payload
+        // No se permite cambiar el id compuesto via payload
         db.setMarca(in.getMarca());
         db.setModelo(in.getModelo());
         db.setColor(in.getColor());
@@ -96,13 +98,14 @@ public class ProductoService {
         repo.delete(findByIds(categoriaId, productoId));
     }
 
-    //Reserva y descuento de stock
-
+    // Reserva y descuento de stock
     @Transactional
     public void verificarYDescontarStock(List<StockReservaItem> items) {
         if (items == null || items.isEmpty()) {
-            throw new IllegalArgumentException("La lista de items de stock no puede estar vacía");
+            throw new IllegalArgumentException("La lista de items de stock no puede estar vacia");
         }
+
+        log.info("Reservando stock para {} items", items.size());
 
         // Primero validamos todo (existencia y stock suficiente)
         for (StockReservaItem item : items) {
@@ -123,18 +126,18 @@ public class ProductoService {
             }
         }
 
-        // Si todo está OK, recién aquí descontamos stock
+        // Si todo esta OK, recien aqui descontamos stock
         for (StockReservaItem item : items) {
             var producto = repo.findByIdIdProducto(item.getIdProducto())
                     .orElseThrow(() -> new EntityNotFoundException(
                             "Producto no encontrado con id_producto=" + item.getIdProducto()));
             producto.setStock(producto.getStock() - item.getCantidad());
             repo.save(producto);
+            log.info("Stock descontado: idProducto={} nuevoStock={}", item.getIdProducto(), producto.getStock());
         }
     }
 
-    //Helpers
-
+    // Helpers
     private void normalizar(Producto p) {
         if (p.getMarca() != null) p.setMarca(p.getMarca().trim());
         if (p.getModelo() != null) p.setModelo(p.getModelo().trim());

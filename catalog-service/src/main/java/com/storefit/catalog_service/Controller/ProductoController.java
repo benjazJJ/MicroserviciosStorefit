@@ -27,31 +27,32 @@ import com.storefit.catalog_service.security.Authorization;
 import com.storefit.catalog_service.security.RequestUser;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequestMapping("/api/v1/productos")
 @RequiredArgsConstructor
+@Slf4j
 public class ProductoController {
 
     private final ProductoService service;
 
     @Operation(summary = "Listar productos", description = "Obtiene todos los productos del catalogo")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "OK",
-            content = @Content(array = @ArraySchema(schema = @Schema(implementation = Producto.class))))
+            @ApiResponse(responseCode = "200", description = "OK", content = @Content(array = @ArraySchema(schema = @Schema(implementation = Producto.class))))
     })
     @GetMapping
     public ResponseEntity<List<Producto>> all(
-            @RequestHeader("X-User-Rut") String headerRut,   // Header con RUT autenticado
-            @RequestHeader("X-User-Rol") String headerRol) { // Header con rol autenticado
+            @RequestHeader("X-User-Rut") String headerRut,
+            @RequestHeader("X-User-Rol") String headerRol) {
         Authorization.fromHeaders(headerRut, headerRol); // Requiere usuario autenticado (cualquier rol)
         return ResponseEntity.ok(service.findAll());
     }
@@ -65,67 +66,62 @@ public class ProductoController {
     public ResponseEntity<Producto> byId(
             @PathVariable Long categoriaId,
             @PathVariable Long productoId,
-            @RequestHeader("X-User-Rut") String headerRut,   // Header con RUT autenticado
-            @RequestHeader("X-User-Rol") String headerRol) { // Header con rol autenticado
+            @RequestHeader("X-User-Rut") String headerRut,
+            @RequestHeader("X-User-Rol") String headerRol) {
         Authorization.fromHeaders(headerRut, headerRol); // Requiere usuario autenticado (cualquier rol)
         return ResponseEntity.ok(service.findByIds(categoriaId, productoId));
     }
 
-    @Operation(summary = "Listar productos por categoria",
-            description = "Devuelve los productos pertenecientes a la categoria indicada")
+    @Operation(summary = "Listar productos por categoria", description = "Devuelve los productos pertenecientes a la categoria indicada")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "OK",
-            content = @Content(array = @ArraySchema(schema = @Schema(implementation = Producto.class))))
+            @ApiResponse(responseCode = "200", description = "OK", content = @Content(array = @ArraySchema(schema = @Schema(implementation = Producto.class))))
     })
     @GetMapping("/categoria/{categoriaId}")
     public ResponseEntity<List<Producto>> byCategoria(
             @PathVariable Long categoriaId,
-            @RequestHeader("X-User-Rut") String headerRut,   // Header con RUT autenticado
-            @RequestHeader("X-User-Rol") String headerRol) { // Header con rol autenticado
+            @RequestHeader("X-User-Rut") String headerRut,
+            @RequestHeader("X-User-Rol") String headerRol) {
         Authorization.fromHeaders(headerRut, headerRol); // Requiere usuario autenticado (cualquier rol)
         return ResponseEntity.ok(service.findByCategoria(categoriaId));
     }
 
-    @Operation(summary = "Crear producto",
-            description = "Crea un nuevo producto con id compuesto (id_categoria + id_producto). Requiere que la categoria exista.")
+    @Operation(summary = "Crear producto", description = "Crea un nuevo producto con id compuesto (id_categoria + id_producto). Requiere que la categoria exista.")
     @ApiResponses({
-        @ApiResponse(responseCode = "201", description = "Creado"),
-        @ApiResponse(responseCode = "400", description = "Datos invalidos"),
-        @ApiResponse(responseCode = "404", description = "Categoria no encontrada"),
-        @ApiResponse(responseCode = "409", description = "Producto duplicado")
+            @ApiResponse(responseCode = "201", description = "Creado"),
+            @ApiResponse(responseCode = "400", description = "Datos invalidos"),
+            @ApiResponse(responseCode = "404", description = "Categoria no encontrada"),
+            @ApiResponse(responseCode = "409", description = "Producto duplicado")
     })
     @PostMapping
     public ResponseEntity<Map<String, Object>> create(
-            @RequestHeader("X-User-Rut") String headerRut,   // Header con RUT autenticado
-            @RequestHeader("X-User-Rol") String headerRol,  // Header con rol autenticado
+            @RequestHeader("X-User-Rut") String headerRut,
+            @RequestHeader("X-User-Rol") String headerRol,
             @Valid @RequestBody Producto p) {
-        RequestUser user = Authorization.fromHeaders(headerRut, headerRol); // Valida headers
+        RequestUser user = Authorization.fromHeaders(headerRut, headerRol);
         Authorization.requireAdmin(user); // Solo ADMIN
         var created = service.create(p);
         ProductoId id = created.getId();
         var location = URI.create("/api/v1/productos/" + id.getIdCategoria() + "/" + id.getIdProducto());
         return ResponseEntity.created(location).body(
-            Map.of(
-                "message", "Producto agregado correctamente",
-                "data", created
-            )
-        );
+                Map.of(
+                        "message", "Producto agregado correctamente",
+                        "data", created));
     }
 
     @Operation(summary = "Actualizar producto", description = "Actualiza los datos del producto identificado por id_categoria e id_producto")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Actualizado"),
-        @ApiResponse(responseCode = "400", description = "Datos invalidos"),
-        @ApiResponse(responseCode = "404", description = "No encontrado")
+            @ApiResponse(responseCode = "200", description = "Actualizado"),
+            @ApiResponse(responseCode = "400", description = "Datos invalidos"),
+            @ApiResponse(responseCode = "404", description = "No encontrado")
     })
     @PutMapping("/{categoriaId}/{productoId}")
     public ResponseEntity<Map<String, Object>> update(
             @PathVariable Long categoriaId,
             @PathVariable Long productoId,
-            @RequestHeader("X-User-Rut") String headerRut,   // Header con RUT autenticado
-            @RequestHeader("X-User-Rol") String headerRol,  // Header con rol autenticado
+            @RequestHeader("X-User-Rut") String headerRut,
+            @RequestHeader("X-User-Rol") String headerRol,
             @Valid @RequestBody Producto p) {
-        RequestUser user = Authorization.fromHeaders(headerRut, headerRol); // Valida headers
+        RequestUser user = Authorization.fromHeaders(headerRut, headerRol);
         Authorization.requireAdmin(user); // Solo ADMIN
 
         var updated = service.update(categoriaId, productoId, p);
@@ -144,9 +140,9 @@ public class ProductoController {
     public ResponseEntity<Map<String, String>> delete(
             @PathVariable Long categoriaId,
             @PathVariable Long productoId,
-            @RequestHeader("X-User-Rut") String headerRut,   // Header con RUT autenticado
-            @RequestHeader("X-User-Rol") String headerRol) { // Header con rol autenticado
-        RequestUser user = Authorization.fromHeaders(headerRut, headerRol); // Valida headers
+            @RequestHeader("X-User-Rut") String headerRut,
+            @RequestHeader("X-User-Rol") String headerRol) {
+        RequestUser user = Authorization.fromHeaders(headerRut, headerRol);
         Authorization.requireAdmin(user); // Solo ADMIN
         service.delete(categoriaId, productoId);
         return ResponseEntity.ok(
@@ -154,36 +150,42 @@ public class ProductoController {
     }
 
     // Reservar y descontar stock para una compra
-
-    @Operation(
-            summary = "Reservar y descontar stock para una compra",
-            description = "Verifica que haya stock suficiente para todos los productos y descuenta el stock si todo esta OK"
-    )
+    @Operation(summary = "Reservar y descontar stock para una compra", description = "Valida y descuenta stock para la lista enviada.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Stock reservado correctamente"),
-            @ApiResponse(responseCode = "400", description = "Datos invalidos o stock insuficiente"),
-            @ApiResponse(responseCode = "404", description = "Algun producto no existe")
+            @ApiResponse(responseCode = "400", description = "Datos invalidos")
     })
     @PostMapping("/stock/reservar")
     public ResponseEntity<Map<String, Object>> reservarStock(
             @RequestBody List<StockReservaItem> items) {
+
+        if (items == null || items.isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", "La lista de items no puede estar vacia"));
+        }
+
+        log.info("Reserva de stock recibida: {}", items);
+
+        // Valida existencia y stock suficiente en BD y descuenta
         service.verificarYDescontarStock(items);
+
         return ResponseEntity.ok(
-                Map.of(
-                        "message", "Stock reservado correctamente"));
+                Map.of("message", "Stock reservado y descontado correctamente"));
     }
 
     // Manejo de errores local al controlador
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleNotFound(EntityNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(Map.of("message", ex.getMessage() != null ? ex.getMessage() : "Recurso no encontrado"));
+                .body(Map.of("message",
+                        ex.getMessage() != null ? ex.getMessage() : "Recurso no encontrado"));
     }
 
-    @ExceptionHandler({ IllegalArgumentException.class, StockInsuficienteException.class })
+    @ExceptionHandler({IllegalArgumentException.class, StockInsuficienteException.class})
     public ResponseEntity<Map<String, Object>> handleBadRequest(RuntimeException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(Map.of("message", ex.getMessage() != null ? ex.getMessage() : "Solicitud invalida"));
+                .body(Map.of("message",
+                        ex.getMessage() != null ? ex.getMessage() : "Solicitud invalida"));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
