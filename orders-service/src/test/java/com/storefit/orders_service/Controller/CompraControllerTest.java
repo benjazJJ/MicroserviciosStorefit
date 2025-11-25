@@ -37,6 +37,11 @@ class CompraControllerTest {
         @Autowired
         private ObjectMapper objectMapper;
 
+        private static final String HEADER_RUT_ADMIN = "11.111.111-1";
+        private static final String HEADER_RUT_CLIENTE = "12345678-9";
+        private static final String ADMIN = "ADMIN";
+        private static final String CLIENTE = "CLIENTE";
+
         private CompraDetalle sampleDetalle1() {
                 return CompraDetalle.builder()
                                 .idDetalle(10L)
@@ -78,7 +83,9 @@ class CompraControllerTest {
 
                 when(compraService.listarTodas()).thenReturn(List.of(c1, c2));
 
-                mockMvc.perform(get("/api/v1/compras"))
+                mockMvc.perform(get("/api/v1/compras")
+                                .header("X-User-Rut", HEADER_RUT_ADMIN)
+                                .header("X-User-Rol", ADMIN))
                                 .andExpect(status().isOk())
                                 .andExpect(jsonPath("$.length()").value(2))
                                 .andExpect(jsonPath("$[0].idCompra").value(1))
@@ -90,7 +97,9 @@ class CompraControllerTest {
                 var compra = sampleCompra();
                 when(compraService.obtenerPorId(1L)).thenReturn(compra);
 
-                mockMvc.perform(get("/api/v1/compras/{id}", 1L))
+                mockMvc.perform(get("/api/v1/compras/{id}", 1L)
+                                .header("X-User-Rut", HEADER_RUT_ADMIN)
+                                .header("X-User-Rol", ADMIN))
                                 .andExpect(status().isOk())
                                 .andExpect(jsonPath("$.idCompra").value(1))
                                 .andExpect(jsonPath("$.rutUsuario").value("12345678-9"))
@@ -102,7 +111,9 @@ class CompraControllerTest {
                 var compra = sampleCompra();
                 when(compraService.historialPorRut("12345678-9")).thenReturn(List.of(compra));
 
-                mockMvc.perform(get("/api/v1/compras/usuario/{rut}", "12345678-9"))
+                mockMvc.perform(get("/api/v1/compras/usuario/{rut}", "12345678-9")
+                                .header("X-User-Rut", HEADER_RUT_ADMIN)
+                                .header("X-User-Rol", ADMIN))
                                 .andExpect(status().isOk())
                                 .andExpect(jsonPath("$.length()").value(1))
                                 .andExpect(jsonPath("$[0].rutUsuario").value("12345678-9"));
@@ -112,7 +123,9 @@ class CompraControllerTest {
         void totalPorRut_debeRetornarEnteroConTotalGastado() throws Exception {
                 when(compraService.totalGastado("12345678-9")).thenReturn(39980);
 
-                mockMvc.perform(get("/api/v1/compras/usuario/{rut}/total", "12345678-9"))
+                mockMvc.perform(get("/api/v1/compras/usuario/{rut}/total", "12345678-9")
+                                .header("X-User-Rut", HEADER_RUT_ADMIN)
+                                .header("X-User-Rol", ADMIN))
                                 .andExpect(status().isOk())
                                 .andExpect(content().string("39980"));
         }
@@ -148,7 +161,9 @@ class CompraControllerTest {
                 mockMvc.perform(
                                 post("/api/v1/compras")
                                                 .contentType(MediaType.APPLICATION_JSON)
-                                                .content(json))
+                                                .content(json)
+                                                .header("X-User-Rut", HEADER_RUT_CLIENTE)
+                                                .header("X-User-Rol", CLIENTE))
                                 .andExpect(status().isCreated())
                                 .andExpect(header().string("Location", "/api/v1/compras/1"))
                                 .andExpect(jsonPath("$.idCompra").value(1))

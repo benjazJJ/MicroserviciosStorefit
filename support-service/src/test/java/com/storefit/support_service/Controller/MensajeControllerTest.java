@@ -35,6 +35,13 @@ public class MensajeControllerTest {
     @MockBean
     private MensajeService mensajeService;
 
+    private static final String HEADER_RUT_ADMIN = "11.111.111-1";
+    private static final String HEADER_RUT_CLIENTE = "12345678-9";
+    private static final String HEADER_RUT_SOPORTE = "11111111-1";
+    private static final String HEADER_ROL_ADMIN = "ADMIN";
+    private static final String HEADER_ROL_CLIENTE = "CLIENTE";
+    private static final String HEADER_ROL_SOPORTE = "SOPORTE";
+
     // -------- helpers --------
 
     private Mensaje crearMensaje(
@@ -68,7 +75,9 @@ public class MensajeControllerTest {
 
         when(mensajeService.listarTodos()).thenReturn(List.of(m1, m2));
 
-        mockMvc.perform(get("/api/v1/mensajes"))
+        mockMvc.perform(get("/api/v1/mensajes")
+                        .header("X-User-Rut", HEADER_RUT_SOPORTE)
+                        .header("X-User-Rol", HEADER_ROL_SOPORTE))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$[0].id").value(1))
@@ -84,7 +93,9 @@ public class MensajeControllerTest {
 
         when(mensajeService.obtenerPorId(1L)).thenReturn(m1);
 
-        mockMvc.perform(get("/api/v1/mensajes/{id}", 1L))
+        mockMvc.perform(get("/api/v1/mensajes/{id}", 1L)
+                        .header("X-User-Rut", HEADER_RUT_SOPORTE)
+                        .header("X-User-Rol", HEADER_ROL_SOPORTE))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id").value(1))
@@ -97,7 +108,9 @@ public class MensajeControllerTest {
     void eliminar_deberiaRetornarNoContent() throws Exception {
         doNothing().when(mensajeService).eliminar(1L);
 
-        mockMvc.perform(delete("/api/v1/mensajes/{id}", 1L))
+        mockMvc.perform(delete("/api/v1/mensajes/{id}", 1L)
+                        .header("X-User-Rut", HEADER_RUT_SOPORTE)
+                        .header("X-User-Rol", HEADER_ROL_SOPORTE))
                 .andExpect(status().isNoContent());
     }
 
@@ -108,9 +121,12 @@ public class MensajeControllerTest {
         Mensaje leido = crearMensaje(1L, "11111111-1", 3, null, "Hola soporte", false);
         leido.setLeido(true);
 
+        when(mensajeService.obtenerPorId(1L)).thenReturn(leido);
         when(mensajeService.marcarComoLeido(1L)).thenReturn(leido);
 
-        mockMvc.perform(patch("/api/v1/mensajes/{id}/leido", 1L))
+        mockMvc.perform(patch("/api/v1/mensajes/{id}/leido", 1L)
+                        .header("X-User-Rut", HEADER_RUT_SOPORTE)
+                        .header("X-User-Rol", HEADER_ROL_SOPORTE))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.leido").value(true));
@@ -131,7 +147,9 @@ public class MensajeControllerTest {
 
         mockMvc.perform(post("/api/v1/mensajes/cliente")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+                .content(objectMapper.writeValueAsString(request))
+                .header("X-User-Rut", HEADER_RUT_CLIENTE)
+                .header("X-User-Rol", HEADER_ROL_CLIENTE))
                 .andExpect(status().isCreated())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id").value(1))
@@ -155,7 +173,9 @@ public class MensajeControllerTest {
 
         mockMvc.perform(post("/api/v1/mensajes/soporte/{originalId}/respuesta", 1L)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+                .content(objectMapper.writeValueAsString(request))
+                .header("X-User-Rut", HEADER_RUT_SOPORTE)
+                .header("X-User-Rol", HEADER_ROL_SOPORTE))
                 .andExpect(status().isCreated())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id").value(2))
@@ -176,7 +196,9 @@ public class MensajeControllerTest {
         when(mensajeService.bandejaSoporte(false))
                 .thenReturn(List.of(dto));
 
-        mockMvc.perform(get("/api/v1/mensajes/soporte/bandeja"))
+        mockMvc.perform(get("/api/v1/mensajes/soporte/bandeja")
+                        .header("X-User-Rut", HEADER_RUT_SOPORTE)
+                        .header("X-User-Rol", HEADER_ROL_SOPORTE))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$[0].clienteMensaje.id").value(1))
@@ -197,7 +219,9 @@ public class MensajeControllerTest {
         when(mensajeService.bandejaUsuario("12345678-9", false))
                 .thenReturn(List.of(dto));
 
-        mockMvc.perform(get("/api/v1/mensajes/usuario/{rut}/bandeja", "12345678-9"))
+        mockMvc.perform(get("/api/v1/mensajes/usuario/{rut}/bandeja", "12345678-9")
+                        .header("X-User-Rut", HEADER_RUT_CLIENTE)
+                        .header("X-User-Rol", HEADER_ROL_CLIENTE))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$[0].clienteMensaje.id").value(1))
@@ -214,7 +238,9 @@ public class MensajeControllerTest {
         when(mensajeService.mensajesPorThread(1L))
                 .thenReturn(List.of(original, resp));
 
-        mockMvc.perform(get("/api/v1/mensajes/hilos/{idHilo}", 1L))
+        mockMvc.perform(get("/api/v1/mensajes/hilos/{idHilo}", 1L)
+                        .header("X-User-Rut", HEADER_RUT_CLIENTE)
+                        .header("X-User-Rol", HEADER_ROL_CLIENTE))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$[0].id").value(1))

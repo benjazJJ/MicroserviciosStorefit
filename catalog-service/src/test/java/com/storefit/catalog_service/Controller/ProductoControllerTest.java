@@ -16,7 +16,6 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
-import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -40,6 +39,10 @@ class ProductoControllerTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    private static final String HEADER_RUT = "11.111.111-1";
+    private static final String HEADER_ROL_ADMIN = "ADMIN";
+    private static final String HEADER_ROL_CLIENTE = "CLIENTE";
 
     private Producto sampleProducto() {
         return Producto.builder()
@@ -70,7 +73,9 @@ class ProductoControllerTest {
 
         when(productoService.findAll()).thenReturn(List.of(p1, p2));
 
-        mockMvc.perform(get("/api/v1/productos"))
+        mockMvc.perform(get("/api/v1/productos")
+                        .header("X-User-Rut", HEADER_RUT)
+                        .header("X-User-Rol", HEADER_ROL_CLIENTE))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2))
                 .andExpect(jsonPath("$[0].id.idCategoria").value(1))
@@ -83,7 +88,9 @@ class ProductoControllerTest {
         var p = sampleProducto();
         when(productoService.findByIds(1L, 1001L)).thenReturn(p);
 
-        mockMvc.perform(get("/api/v1/productos/{categoriaId}/{productoId}", 1L, 1001L))
+        mockMvc.perform(get("/api/v1/productos/{categoriaId}/{productoId}", 1L, 1001L)
+                        .header("X-User-Rut", HEADER_RUT)
+                        .header("X-User-Rol", HEADER_ROL_CLIENTE))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id.idCategoria").value(1))
                 .andExpect(jsonPath("$.id.idProducto").value(1001))
@@ -95,7 +102,9 @@ class ProductoControllerTest {
         var p1 = sampleProducto();
         when(productoService.findByCategoria(1L)).thenReturn(List.of(p1));
 
-        mockMvc.perform(get("/api/v1/productos/categoria/{categoriaId}", 1L))
+        mockMvc.perform(get("/api/v1/productos/categoria/{categoriaId}", 1L)
+                        .header("X-User-Rut", HEADER_RUT)
+                        .header("X-User-Rol", HEADER_ROL_CLIENTE))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].id.idCategoria").value(1));
@@ -104,17 +113,19 @@ class ProductoControllerTest {
     @Test
     void byCategoria_debeRetornar404SiCategoriaNoExiste() throws Exception {
         when(productoService.findByCategoria(999L))
-                .thenThrow(new jakarta.persistence.EntityNotFoundException("Categoría no encontrada: 999"));
+                .thenThrow(new jakarta.persistence.EntityNotFoundException("Categoria no encontrada: 999"));
 
-        mockMvc.perform(get("/api/v1/productos/categoria/{categoriaId}", 999L))
+        mockMvc.perform(get("/api/v1/productos/categoria/{categoriaId}", 999L)
+                        .header("X-User-Rut", HEADER_RUT)
+                        .header("X-User-Rol", HEADER_ROL_CLIENTE))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value("Categoría no encontrada: 999"));
+                .andExpect(jsonPath("$.message").value("Categoria no encontrada: 999"));
     }
 
     @Test
     void create_debeCrearProductoYRetornar201ConMensajeYData() throws Exception {
         var input = sampleProducto();
-        var creado = sampleProducto(); // simulamos que es lo mismo que entró
+        var creado = sampleProducto();
         when(productoService.create(any(Producto.class))).thenReturn(creado);
 
         String json = objectMapper.writeValueAsString(input);
@@ -123,10 +134,12 @@ class ProductoControllerTest {
                         post("/api/v1/productos")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(json)
+                                .header("X-User-Rut", HEADER_RUT)
+                                .header("X-User-Rol", HEADER_ROL_ADMIN)
                 )
                 .andExpect(status().isCreated())
                 .andExpect(header().string("Location", "/api/v1/productos/1/1001"))
-                .andExpect(jsonPath("$.message").value("Producto añadido correctamente"))
+                .andExpect(jsonPath("$.message").value("Producto agregado correctamente"))
                 .andExpect(jsonPath("$.data.marca").value("Adidas"))
                 .andExpect(jsonPath("$.data.id.idCategoria").value(1))
                 .andExpect(jsonPath("$.data.id.idProducto").value(1001));
@@ -146,6 +159,8 @@ class ProductoControllerTest {
                         put("/api/v1/productos/{categoriaId}/{productoId}", 1L, 1001L)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(json)
+                                .header("X-User-Rut", HEADER_RUT)
+                                .header("X-User-Rol", HEADER_ROL_ADMIN)
                 )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("Producto actualizado correctamente"))
@@ -156,7 +171,9 @@ class ProductoControllerTest {
     void delete_debeEliminarProductoYRetornarMensajeOk() throws Exception {
         willDoNothing().given(productoService).delete(1L, 1001L);
 
-        mockMvc.perform(delete("/api/v1/productos/{categoriaId}/{productoId}", 1L, 1001L))
+        mockMvc.perform(delete("/api/v1/productos/{categoriaId}/{productoId}", 1L, 1001L)
+                        .header("X-User-Rut", HEADER_RUT)
+                        .header("X-User-Rol", HEADER_ROL_ADMIN))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("Producto eliminado correctamente"));
     }
@@ -168,7 +185,6 @@ class ProductoControllerTest {
                 new StockReservaItem(2001L, 1)
         );
 
-        // el service no devuelve nada (void)
         willDoNothing().given(productoService)
                 .verificarYDescontarStock(ArgumentMatchers.anyList());
 
@@ -180,6 +196,6 @@ class ProductoControllerTest {
                                 .content(json)
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("Stock reservado correctamente"));
+                .andExpect(jsonPath("$.message").value("Stock reservado y descontado correctamente"));
     }
 }

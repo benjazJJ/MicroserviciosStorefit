@@ -1,6 +1,5 @@
 package com.storefit.catalog_service.Service;
 
-
 import java.util.List;
 import java.util.Optional;
 
@@ -36,7 +35,6 @@ class ProductoServiceTest {
 
     @Test
     void verificarYDescontarStock_cuandoTodoOk_descuentaStockYGuarda() {
-        // Arreglo
         StockReservaItem item1 = new StockReservaItem(1001L, 2);
         StockReservaItem item2 = new StockReservaItem(2001L, 1);
 
@@ -63,12 +61,10 @@ class ProductoServiceTest {
         when(productoRepository.findByIdIdProducto(1001L)).thenReturn(Optional.of(p1));
         when(productoRepository.findByIdIdProducto(2001L)).thenReturn(Optional.of(p2));
 
-        // Act
         service.verificarYDescontarStock(List.of(item1, item2));
 
-        // Assert
-        assertThat(p1.getStock()).isEqualTo(3); // 5 - 2
-        assertThat(p2.getStock()).isEqualTo(2); // 3 - 1
+        assertThat(p1.getStock()).isEqualTo(3);
+        assertThat(p2.getStock()).isEqualTo(2);
 
         verify(productoRepository, times(1)).save(p1);
         verify(productoRepository, times(1)).save(p2);
@@ -76,11 +72,9 @@ class ProductoServiceTest {
 
     @Test
     void verificarYDescontarStock_cuandoProductoNoExiste_lanzaEntityNotFound() {
-        // Arrange
         StockReservaItem item = new StockReservaItem(9999L, 1);
         when(productoRepository.findByIdIdProducto(9999L)).thenReturn(Optional.empty());
 
-        // Act / Assert
         assertThatThrownBy(() ->
                 service.verificarYDescontarStock(List.of(item))
         )
@@ -90,7 +84,6 @@ class ProductoServiceTest {
 
     @Test
     void verificarYDescontarStock_cuandoNoHayStockSuficiente_lanzaStockInsuficiente() {
-        // Arreglo
         StockReservaItem item = new StockReservaItem(1001L, 10);
 
         Producto p = Producto.builder()
@@ -105,7 +98,6 @@ class ProductoServiceTest {
 
         when(productoRepository.findByIdIdProducto(1001L)).thenReturn(Optional.of(p));
 
-        // Act / Assert
         assertThatThrownBy(() ->
                 service.verificarYDescontarStock(List.of(item))
         )
@@ -119,7 +111,7 @@ class ProductoServiceTest {
                 service.verificarYDescontarStock(List.of())
         )
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("no puede estar vacía");
+                .hasMessageContaining("no puede estar vacia");
     }
 
     @Test

@@ -25,13 +25,17 @@ class CategoriaControllerNotFoundTest {
     @MockBean
     private CategoriaService categoriaService;
 
+    private static final String HEADER_RUT = "11.111.111-1";
+    private static final String HEADER_ROL = "ADMIN";
+
     @Test
     void byId_cuandoNoExiste_retorna404ConMensaje() throws Exception {
-        when(categoriaService.findById(888L)).thenThrow(new EntityNotFoundException("Categoría no encontrada: 888"));
+        when(categoriaService.findById(888L)).thenThrow(new EntityNotFoundException("CategorÃ­a no encontrada: 888"));
 
-        mockMvc.perform(get("/api/v1/categorias/{id}", 888L))
+        mockMvc.perform(get("/api/v1/categorias/{id}", 888L)
+                .header("X-User-Rut", HEADER_RUT)
+                .header("X-User-Rol", HEADER_ROL))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value("Categoría no encontrada: 888"));
+                .andExpect(jsonPath("$.message").value("CategorÃ­a no encontrada: 888"));
     }
 }
-
